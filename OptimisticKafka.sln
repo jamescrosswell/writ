@@ -1,15 +1,27 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.0
+VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptimisticKafka", "OptimisticKafka\OptimisticKafka.csproj", "{563B2441-5635-495F-B38C-EF8E057F78D9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B0323E80-757C-4082-9EEC-FD1FB58439F8}"
 	ProjectSection(SolutionItems) = preProject
-		docker-compose.yml = docker-compose.yml
+		.gitignore = .gitignore
 		readme.md = readme.md
 	EndProjectSection
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{658DD44C-4076-47DF-8FAE-79C35AE942F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging", "Messaging\Messaging.csproj", "{361118EE-3ACF-4664-BE2A-A17BCA0C3800}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging.Tests", "Messaging.Tests\Messaging.Tests.csproj", "{3F9FF178-FC65-4F22-9515-85C0C9ECAA74}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4BABD1BF-A879-4CCE-B9E2-328179D6F85C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{38C8546A-A6F9-4A17-9619-8E6FA8E181D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging.Kafka", "Messaging.Kafka\Messaging.Kafka.csproj", "{D790C619-DD51-44A8-A0CC-1E400A5545AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,8 +33,31 @@ Global
 		{563B2441-5635-495F-B38C-EF8E057F78D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{563B2441-5635-495F-B38C-EF8E057F78D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{563B2441-5635-495F-B38C-EF8E057F78D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{658DD44C-4076-47DF-8FAE-79C35AE942F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{658DD44C-4076-47DF-8FAE-79C35AE942F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{658DD44C-4076-47DF-8FAE-79C35AE942F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{658DD44C-4076-47DF-8FAE-79C35AE942F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{361118EE-3ACF-4664-BE2A-A17BCA0C3800}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{361118EE-3ACF-4664-BE2A-A17BCA0C3800}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{361118EE-3ACF-4664-BE2A-A17BCA0C3800}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{361118EE-3ACF-4664-BE2A-A17BCA0C3800}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F9FF178-FC65-4F22-9515-85C0C9ECAA74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F9FF178-FC65-4F22-9515-85C0C9ECAA74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F9FF178-FC65-4F22-9515-85C0C9ECAA74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F9FF178-FC65-4F22-9515-85C0C9ECAA74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D790C619-DD51-44A8-A0CC-1E400A5545AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D790C619-DD51-44A8-A0CC-1E400A5545AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D790C619-DD51-44A8-A0CC-1E400A5545AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D790C619-DD51-44A8-A0CC-1E400A5545AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{563B2441-5635-495F-B38C-EF8E057F78D9} = {38C8546A-A6F9-4A17-9619-8E6FA8E181D2}
+		{658DD44C-4076-47DF-8FAE-79C35AE942F5} = {B0323E80-757C-4082-9EEC-FD1FB58439F8}
+		{361118EE-3ACF-4664-BE2A-A17BCA0C3800} = {38C8546A-A6F9-4A17-9619-8E6FA8E181D2}
+		{3F9FF178-FC65-4F22-9515-85C0C9ECAA74} = {4BABD1BF-A879-4CCE-B9E2-328179D6F85C}
+		{D790C619-DD51-44A8-A0CC-1E400A5545AE} = {38C8546A-A6F9-4A17-9619-8E6FA8E181D2}
 	EndGlobalSection
 EndGlobal

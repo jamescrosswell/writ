@@ -7,7 +7,20 @@
 
   <ItemGroup>
     <PackageReference Include="Confluent.Kafka" Version="0.11.0-RC1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Messaging.Kafka\Messaging.Kafka.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update=".dockerignore">
+      <DependentUpon>Dockerfile</DependentUpon>
+    </None>
   </ItemGroup>
 
 </Project>
