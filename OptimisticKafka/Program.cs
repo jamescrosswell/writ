@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
@@ -13,6 +14,8 @@ namespace OptimisticKafka
 {
     class Program
     {
+        const string brokerList = "localhost:9092";
+
         static void Main(string[] args)
         {
             //setup our DI
@@ -39,9 +42,27 @@ namespace OptimisticKafka
                 task2.GetAwaiter().GetResult();
             }
 
-            // Wait for a key press to finish
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            using (var consumer = serviceProvider.GetRequiredService<Consumer<string, object>>())
+            {                
+                consumer.Subscribe(new[] { nameof(MakeDeposit) });
+                logger.LogDebug($"Consumer {consumer.Name} subscribed to { string.Join(",", consumer.Subscription) }");
+
+                var cancelled = false;
+                Console.CancelKeyPress += (_, e) => {
+                    e.Cancel = true; // prevent the process from terminating.
+                    cancelled = true;
+                };
+
+                Console.WriteLine("Ctrl-C to exit.");
+                while (!cancelled)
+                {
+                    if (consumer.Consume(out Message<string, object> msg, TimeSpan.FromSeconds(1)))
+                    {
+                        Console.WriteLine($"Topic: {msg.Topic} Partition: {msg.Partition} Offset: {msg.Offset}");
+                        Console.WriteLine($"{msg.Value}");
+                    }
+                }
+            }
         }
 
         private static IServiceProvider ConfigureServices(IServiceCollection services)
@@ -53,13 +74,18 @@ namespace OptimisticKafka
             services.AddTransient<IEnvelopeHandler>(p => new EnvelopeHandler(
                 applicationName: "OptimisticKafka", correlationProvider: p.GetService<ICorrelationIdProvider>()));
 
-            const string brokerList = "localhost:9092";
-            services.AddSingleton(p => new KafkaConfig(new Dictionary<string, object> { { "bootstrap.servers", brokerList } }));
+            services.AddSingleton(p => new KafkaConfig(new Dictionary<string, object>
+            {
+                { "group.id", "OptimisticKafka" },
+                { "auto.offset.reset", "smallest" },
+                { "bootstrap.servers", brokerList }
+            }));
 
+            services.AddSingleton<ISerializer<string>>(p => new StringSerializer(Encoding.UTF8));
+            services.AddSingleton<IDeserializer<string>>(p => new StringDeserializer(Encoding.UTF8));
             services.AddSingleton<JsonMessageSerializationHelper>();
             services.AddSingleton<ISerializer<object>>(p => p.GetRequiredService<JsonMessageSerializationHelper>());
             services.AddSingleton<IDeserializer<object>>(p => p.GetRequiredService<JsonMessageSerializationHelper>());
-            services.AddSingleton<ISerializer<string>>(p => new StringSerializer(Encoding.UTF8));
 
             services.AddTransient<ISerializingProducer<string, object>>(
                 p => new Producer<string, object>(
@@ -73,6 +99,12 @@ namespace OptimisticKafka
             services.AddTransient(p => new EnvelopedObjectMessageProducer(
                 p.GetService<ObjectMessageProducer>(), p.GetService<IEnvelopeHandler>()));
             services.AddSingleton<EntityMessageProducerFactory>();
+
+            services.AddTransient<Consumer<string, object>>(p =>
+                new Consumer<string, object>(
+                    p.GetRequiredService <KafkaConfig>(),
+                    p.GetRequiredService<IDeserializer<string>>(),
+                    p.GetRequiredService<IDeserializer<object>>()));
 
             return services.BuildServiceProvider();
         }

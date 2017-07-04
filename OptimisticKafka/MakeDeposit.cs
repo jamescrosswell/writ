@@ -4,6 +4,11 @@ namespace OptimisticKafka
 {
     class MakeDeposit : Entity
     {
+        internal MakeDeposit()
+        {
+            
+        }
+
         public MakeDeposit(Guid id, decimal amount)
             : base(id)
         {
