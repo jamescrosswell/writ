@@ -35,6 +35,6 @@ namespace Messaging.Kafka
             _wrappedProducer?.Dispose();
         }
 
-        public ProducerProxy Internal => _wrappedProducer.Internal;
+        public string Name => _wrappedProducer.Name;
     }
 }

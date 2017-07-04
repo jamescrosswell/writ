@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
 using Messaging;
 using Messaging.Kafka;
@@ -30,14 +32,11 @@ namespace OptimisticKafka
             {
                 var value = new MakeDeposit(10m);
                 var deliveryReport = producer.ProduceAsync(value);
-                deliveryReport.ContinueWith(task =>
+                var task2 = deliveryReport.ContinueWith(task =>
                 {
                     logger.LogDebug($"Partition: {task.Result.Partition}, Offset: {task.Result.Offset}");
                 });
-
-                // Tasks are not waited on synchronously (ContinueWith is not synchronous),
-                // so it's possible they may still in progress here.
-                producer.Internal.Flush(TimeSpan.FromSeconds(10));
+                task2.GetAwaiter().GetResult();
             }
 
             // Wait for a key press to finish
@@ -57,8 +56,17 @@ namespace OptimisticKafka
             const string brokerList = "localhost:9092";
             services.AddSingleton(p => new KafkaConfig(new Dictionary<string, object> { { "bootstrap.servers", brokerList } }));
 
-            services.AddTransient<ISerializer<object>, JsonMessageSerializationHelper>();
-            services.AddTransient<IDeserializer<object>, JsonMessageSerializationHelper>();
+            services.AddSingleton<JsonMessageSerializationHelper>();
+            services.AddSingleton<ISerializer<object>>(p => p.GetRequiredService<JsonMessageSerializationHelper>());
+            services.AddSingleton<IDeserializer<object>>(p => p.GetRequiredService<JsonMessageSerializationHelper>());
+            services.AddSingleton<ISerializer<string>>(p => new StringSerializer(Encoding.UTF8));
+
+            services.AddTransient<ISerializingProducer<string, object>>(
+                p => new Producer<string, object>(
+                    p.GetService<KafkaConfig>(),
+                    p.GetService<ISerializer<string>>(), 
+                    p.GetService<ISerializer<object>>()
+                    ));
 
             // Register decorator chain ConventionalObjectMessageProducer → EnvelopedObjectMessageProducer → ObjectMessageProducer
             services.AddTransient<ObjectMessageProducer>();
@@ -70,7 +78,7 @@ namespace OptimisticKafka
         }
 
         [SuppressMessage("ReSharper", "ClassNeverInstantiated.Local")]
-        class EntityMessageProducerFactory
+        private class EntityMessageProducerFactory
         {
             private readonly IServiceProvider _serviceProvider;
 
@@ -86,7 +94,7 @@ namespace OptimisticKafka
                     _serviceProvider.GetService<EnvelopedObjectMessageProducer>(),
                     MessageConventions.Key,
                     MessageConventions.Topic,
-                    _serviceProvider.GetService<ILoggerFactory>()
+                    _serviceProvider.GetService<ILogger<ConventionalObjectMessageProducer<TMessage>>>()
                 );
             }
         }

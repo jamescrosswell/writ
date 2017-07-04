@@ -12,24 +12,17 @@ namespace Messaging.Kafka
     /// </summary>
     public class ObjectMessageProducer : IObjectMessageProducer
     {
-        private readonly Producer<string, object> _producer;
+        private readonly ISerializingProducer<string, object> _producer;
 
         /// <summary>
-        ///  Saves us from having to proxy individual methods of the producer in decorators
+        ///  <inheritdoc cref="IObjectMessageProducer"/>
         /// </summary>
-        public ProducerProxy Internal { get; }    
+        public string Name => _producer.Name;
 
-        /// <summary>
-        /// Creates an ConventionalObjectMessageProducer
-        /// </summary>
-        /// <param name="config">Configuration settings to use for the producer (e.g. the brokers list)</param>
-        /// <param name="serializer">The object serializer that should be used to write the message</param>
-        public ObjectMessageProducer(KafkaConfig config, ISerializer<object> serializer)
+        public ObjectMessageProducer(KafkaConfig config, ISerializingProducer<string, object> producer)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
-            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
-            _producer = new Producer<string, object>(config, new StringSerializer(Encoding.UTF8), serializer);
-            Internal = new ProducerProxy(_producer);
+            _producer = producer ?? throw new ArgumentNullException(nameof(producer));
         }
 
         public Task<Message<string, object>> ProduceAsync<TMessage>(string topic, string key, TMessage value)
@@ -43,7 +36,7 @@ namespace Messaging.Kafka
 
         public void Dispose()
         {
-            _producer?.Dispose();
+            (_producer as IDisposable)?.Dispose();
         }
     }
 }

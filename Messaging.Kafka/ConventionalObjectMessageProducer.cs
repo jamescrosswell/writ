@@ -20,6 +20,7 @@ namespace Messaging.Kafka
         private readonly Func<TEntity, string> _keyResolver;
         private readonly Func<TEntity, string> _topicResolver;
         private readonly ILogger<ConventionalObjectMessageProducer<TEntity>> _logger;
+        public string Name => _wrappedProducer.Name;
 
         /// <summary>
         /// Creates a ConventionalObjectMessageProducer
@@ -27,39 +28,31 @@ namespace Messaging.Kafka
         /// <param name="producer">An object message producer to wrap</param>
         /// <param name="keyResolver">Func that determines an appropriate message key</param>
         /// <param name="topicResolver">Func that determines an appropriate topic</param>
-        /// <param name="loggerFactory">Logger factory</param>
-        public ConventionalObjectMessageProducer(IObjectMessageProducer producer, Func<TEntity, string> keyResolver, Func<TEntity, string> topicResolver, ILoggerFactory loggerFactory)
+        /// <param name="logger">Logger factory</param>
+        public ConventionalObjectMessageProducer(
+            IObjectMessageProducer producer, 
+            Func<TEntity, string> keyResolver, 
+            Func<TEntity, string> topicResolver,
+            ILogger<ConventionalObjectMessageProducer<TEntity>> logger)
         {
             _wrappedProducer = producer ?? throw new ArgumentNullException(nameof(producer));
-            _keyResolver = keyResolver;
-            _topicResolver = topicResolver;
-            _logger = loggerFactory?.CreateLogger<ConventionalObjectMessageProducer<TEntity>>() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _keyResolver = keyResolver ?? throw new ArgumentNullException(nameof(keyResolver));
+            _topicResolver = topicResolver ?? throw new ArgumentNullException(nameof(topicResolver));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public Task<Message<string, object>> ProduceAsync(TEntity value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
-            if (_topicResolver == null)
-                throw new InvalidOperationException("Unable to determine an appropriate topic for the message. No topic resolver was supplied.");
-
-            var topic = _topicResolver(value);
-            return ProduceAsync(topic, value);
-        }
-
-        public Task<Message<string, object>> ProduceAsync(string topic, TEntity value)
-        {
-            if (topic == null) throw new ArgumentNullException(nameof(topic));
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            if (_keyResolver == null)
-                throw new InvalidOperationException("Unable to determine an appropriate key for the message. No key resolver was supplied.");
-
             var key = _keyResolver(value);
+            var topic = _topicResolver(value);
+
+            _logger.LogDebug($"{Name} resolved topic {topic} for messsage key {key}.");
             return ProduceAsync(topic, key, value);
         }
 
         public Task<Message<string, object>> ProduceAsync<TMessage>(string topic, string key, TMessage value)
         {
-            _logger.LogDebug($"{Internal.Name} producing on {topic}.");
             return _wrappedProducer.ProduceAsync(topic, key, value);
         }
 
@@ -68,6 +61,5 @@ namespace Messaging.Kafka
             _wrappedProducer?.Dispose();
         }
 
-        public ProducerProxy Internal => _wrappedProducer.Internal;
     }
 }
