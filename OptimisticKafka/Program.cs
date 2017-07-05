@@ -105,8 +105,33 @@ namespace OptimisticKafka
                     p.GetRequiredService <KafkaConfig>(),
                     p.GetRequiredService<IDeserializer<string>>(),
                     p.GetRequiredService<IDeserializer<object>>()));
+            services.AddTransient<ObjectMessageConsumer>();
 
             return services.BuildServiceProvider();
+        }
+
+        [SuppressMessage("ReSharper", "ClassNeverInstantiated.Local")]
+        private class EntityMessageConsumerFactory
+        {
+            private readonly IServiceProvider _serviceProvider;
+
+            public EntityMessageConsumerFactory(IServiceProvider serviceProvider)
+            {
+                _serviceProvider = serviceProvider;
+            }
+
+            public IObjectMessageProducer<TMessage> CreateConsumer<TMessage>()
+                where TMessage : Entity
+            {
+                var consumer = _serviceProvider.GetRequiredService<Consumer<string, object>>();
+                consumer.Subscribe(typeof(TMessage).Name);
+
+                var objectConsumer = new ObjectMessageConsumer(consumer);
+                return new new EnvelopedObjectMessageConsumer(
+                    p.GetService<ObjectMessageConsumer>(),
+                    p.GetService<IEnvelopeHandler>()
+                )
+            }
         }
 
         [SuppressMessage("ReSharper", "ClassNeverInstantiated.Local")]

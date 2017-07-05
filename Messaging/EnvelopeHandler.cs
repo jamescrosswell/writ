@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Messaging
 {
@@ -26,32 +27,10 @@ namespace Messaging
         }
 
         /// <inheritdoc cref="IEnvelopeHandler"/>
-        public TMessage Open<TMessage>(IMessageEnvelope<TMessage> envelope)
+        public TMessage Open<TMessage>(IMessageEnvelope<TMessage> envelope)            
         {
+            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             return envelope.Message;
-        }
-
-        private class MessageEnvelope<TMessage> : IMessageEnvelope<TMessage>
-        {
-            public MessageEnvelope(string correlationId, string applicationName, string senderHostname, DateTimeOffset createdTime, TMessage payload)
-            {
-                CorrelationId = correlationId;
-                ApplicationName = applicationName;
-                SenderHostname = senderHostname;
-                CreatedTime = createdTime;
-                Message = payload;
-            }
-
-            public string CorrelationId { get; }
-            public string ApplicationName { get; }
-            public string SenderHostname { get; }
-            public DateTimeOffset CreatedTime { get; }
-            public TMessage Message { get; }
-
-            public override string ToString()
-            {
-                return $"CorrelationId: {CorrelationId}, ApplicationName: {ApplicationName}, Hostname: {SenderHostname}, CreatedTime: {CreatedTime}, Message: {Message}";
-            }
         }
     }
 }
