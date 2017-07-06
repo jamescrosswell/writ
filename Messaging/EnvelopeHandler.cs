@@ -6,9 +6,9 @@ namespace Messaging
     public class EnvelopeHandler : IEnvelopeHandler
     {
         private readonly string _applicationName;
-        private readonly ICorrelationIdProvider _correlationProvider;
+        private readonly CorrelationProvider _correlationProvider;
 
-        public EnvelopeHandler(string applicationName, ICorrelationIdProvider correlationProvider)
+        public EnvelopeHandler(string applicationName, CorrelationProvider correlationProvider)
         {
             _applicationName = applicationName;
             _correlationProvider = correlationProvider ?? throw new ArgumentNullException(nameof(correlationProvider));
@@ -18,10 +18,9 @@ namespace Messaging
         public IMessageEnvelope<TMessage> Stuff<TMessage>(TMessage message)
         {            
             return new MessageEnvelope<TMessage>(
-                _correlationProvider.GetCurrentCorrelationId(),
+                _correlationProvider(),
                 _applicationName,
                 Environment.MachineName,
-                DateTimeOffset.UtcNow,
                 message
                 );
         }
@@ -33,4 +32,6 @@ namespace Messaging
             return envelope.Message;
         }
     }
+
+    public delegate string CorrelationProvider();
 }

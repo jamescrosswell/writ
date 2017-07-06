@@ -1,8 +1,5 @@
 ﻿using System;
-using System.IO;
-using System.Threading.Tasks;
 using Confluent.Kafka;
-using Microsoft.Extensions.Logging;
 
 namespace Messaging.Kafka
 {
@@ -37,6 +34,8 @@ namespace Messaging.Kafka
             message = fetched?.Repackage(_handler.Open(fetched.Value));
             return result;
         }
+
+        public void Subscribe(string topic) => _wrappedConsumer.Subscribe(topic);
 
         public void Dispose()
         {

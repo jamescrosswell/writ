@@ -9,11 +9,10 @@ namespace Messaging.Tests
         private sealed class Fixture
         {
             public string ApplicationName { get; } = "Messaging.Tests";
-            public ICorrelationIdProvider CorrelationIdProvider { get; } = Substitute.For<ICorrelationIdProvider>();
 
-            public EnvelopeHandler GetSut()
+            public EnvelopeHandler GetSut(CorrelationProvider correlationProvider)
             {
-                return new EnvelopeHandler(ApplicationName, CorrelationIdProvider);
+                return new EnvelopeHandler(ApplicationName, correlationProvider);
             }
         }    
 
@@ -24,15 +23,13 @@ namespace Messaging.Tests
         {
             var message = new Object();
             var correlationId = Guid.NewGuid().ToString();
-            _fixture.CorrelationIdProvider.GetCurrentCorrelationId().Returns(correlationId);
-            var sut = _fixture.GetSut();
+            var sut = _fixture.GetSut(() => correlationId);
 
             var result = sut.Stuff(message);
 
             Assert.Equal(correlationId, result.CorrelationId);
             Assert.Equal(_fixture.ApplicationName, result.ApplicationName);
             Assert.Equal(Environment.MachineName, result.SenderHostname);
-            Assert.InRange(DateTime.UtcNow.Subtract(result.CreatedTime.UtcDateTime).Milliseconds, 0, 100);
             Assert.Equal(message, result.Message);
         }
     }

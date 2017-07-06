@@ -14,5 +14,7 @@ namespace Messaging.Kafka
         /// <inheritdoc cref="Consumer{TKey,TValue}"/>
         /// </summary>
         bool Consume<TMessage>(out Message<string, TMessage> message, TimeSpan timeout) where TMessage: class;
+
+        void Subscribe(string topic);
     }
 }

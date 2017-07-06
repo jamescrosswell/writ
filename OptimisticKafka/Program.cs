@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
 using Messaging;
@@ -12,11 +12,11 @@ using Microsoft.Extensions.Logging;
 
 namespace OptimisticKafka
 {
-    class Program
+    internal class Program
     {
-        const string brokerList = "localhost:9092";
+        private const string BrokerList = "localhost:9092";
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             //setup our DI
             var serviceCollection = new ServiceCollection();
@@ -30,37 +30,40 @@ namespace OptimisticKafka
             var logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger<Program>();
             logger.LogDebug("Starting application");
 
-            var producerFactory = serviceProvider.GetService<EntityMessageProducerFactory>();
-            using (var producer = producerFactory.CreateProducer<MakeDeposit>())
+            // Create a temporary topic for these tests
+            string testTopic = $"OptimisticKafka_{Guid.NewGuid()}";
+            string TopicConvention(Type entityType) => testTopic;
+
+            var producerFactory = serviceProvider.GetRequiredService<EntityMessageProducerFactory>();
+            var consumerFactory = serviceProvider.GetRequiredService<EntityMessageConsumerFactory>();
+            using (var producer = producerFactory.CreateProducer<MakeDeposit>(TopicConvention))
             {
-                var value = new MakeDeposit(10m);
-                var deliveryReport = producer.ProduceAsync(value);
-                var task2 = deliveryReport.ContinueWith(task =>
+                using (var consumer = consumerFactory.CreateConsumer<MakeDeposit>(TopicConvention))
                 {
-                    logger.LogDebug($"Partition: {task.Result.Partition}, Offset: {task.Result.Offset}");
-                });
-                task2.GetAwaiter().GetResult();
-            }
+                    var cancelled = false;
+                    Console.CancelKeyPress += (_, e) => {
+                        e.Cancel = true; // prevent the process from terminating.
+                        cancelled = true;
+                    };
 
-            using (var consumer = serviceProvider.GetRequiredService<Consumer<string, object>>())
-            {                
-                consumer.Subscribe(new[] { nameof(MakeDeposit) });
-                logger.LogDebug($"Consumer {consumer.Name} subscribed to { string.Join(",", consumer.Subscription) }");
-
-                var cancelled = false;
-                Console.CancelKeyPress += (_, e) => {
-                    e.Cancel = true; // prevent the process from terminating.
-                    cancelled = true;
-                };
-
-                Console.WriteLine("Ctrl-C to exit.");
-                while (!cancelled)
-                {
-                    if (consumer.Consume(out Message<string, object> msg, TimeSpan.FromSeconds(1)))
+                    Console.WriteLine("Ctrl-C to exit.");
+                    while (!cancelled)
                     {
+                        var producerTask = producer.ProduceAsync(new MakeDeposit(10m));
+                        var deliveryReport  = producerTask.ContinueWith(LogDeliveryReport);
+                        deliveryReport.GetAwaiter().GetResult();
+
+                        if (!consumer.Consume(out Message<string, MakeDeposit> msg, TimeSpan.FromSeconds(1))) continue;
+
                         Console.WriteLine($"Topic: {msg.Topic} Partition: {msg.Partition} Offset: {msg.Offset}");
                         Console.WriteLine($"{msg.Value}");
                     }
+
+                }
+
+                void LogDeliveryReport(Task<Message<string, object>> task)
+                {
+                    logger.LogDebug($"Partition: {task.Result.Partition}, Offset: {task.Result.Offset}");
                 }
             }
         }
@@ -69,16 +72,17 @@ namespace OptimisticKafka
         {
             services.AddLogging();
 
-            services.AddScoped<ICorrelationIdProvider, DefaultCorrelationProvider>();
+            services.AddScoped<CorrelationProvider>(p => () => Guid.NewGuid().ToString());
 
             services.AddTransient<IEnvelopeHandler>(p => new EnvelopeHandler(
-                applicationName: "OptimisticKafka", correlationProvider: p.GetService<ICorrelationIdProvider>()));
+                applicationName: "OptimisticKafka", correlationProvider: p.GetService<CorrelationProvider>())
+                );
 
             services.AddSingleton(p => new KafkaConfig(new Dictionary<string, object>
             {
                 { "group.id", "OptimisticKafka" },
                 { "auto.offset.reset", "smallest" },
-                { "bootstrap.servers", brokerList }
+                { "bootstrap.servers", BrokerList }
             }));
 
             services.AddSingleton<ISerializer<string>>(p => new StringSerializer(Encoding.UTF8));
@@ -100,12 +104,14 @@ namespace OptimisticKafka
                 p.GetService<ObjectMessageProducer>(), p.GetService<IEnvelopeHandler>()));
             services.AddSingleton<EntityMessageProducerFactory>();
 
-            services.AddTransient<Consumer<string, object>>(p =>
+            services.AddTransient(p =>
                 new Consumer<string, object>(
                     p.GetRequiredService <KafkaConfig>(),
                     p.GetRequiredService<IDeserializer<string>>(),
                     p.GetRequiredService<IDeserializer<object>>()));
+            services.AddSingleton<EntityMessageConsumerFactory>();
             services.AddTransient<ObjectMessageConsumer>();
+            services.AddTransient<EnvelopedObjectMessageConsumer>();
 
             return services.BuildServiceProvider();
         }
@@ -120,17 +126,12 @@ namespace OptimisticKafka
                 _serviceProvider = serviceProvider;
             }
 
-            public IObjectMessageProducer<TMessage> CreateConsumer<TMessage>()
+            public IObjectMessageConsumer CreateConsumer<TMessage>(EntityTopicConvention topicConvention)
                 where TMessage : Entity
             {
-                var consumer = _serviceProvider.GetRequiredService<Consumer<string, object>>();
-                consumer.Subscribe(typeof(TMessage).Name);
-
-                var objectConsumer = new ObjectMessageConsumer(consumer);
-                return new new EnvelopedObjectMessageConsumer(
-                    p.GetService<ObjectMessageConsumer>(),
-                    p.GetService<IEnvelopeHandler>()
-                )
+                var consumer = _serviceProvider.GetService<EnvelopedObjectMessageConsumer>();
+                consumer.Subscribe(topicConvention(typeof(TMessage)));
+                return consumer;
             }
         }
 
@@ -144,13 +145,13 @@ namespace OptimisticKafka
                 _serviceProvider = serviceProvider;
             }
 
-            public IObjectMessageProducer<TMessage> CreateProducer<TMessage>()
+            public IObjectMessageProducer<TMessage> CreateProducer<TMessage>(EntityTopicConvention topicConvention)
                 where TMessage: Entity
             {
                 return new ConventionalObjectMessageProducer<TMessage>(
                     _serviceProvider.GetService<EnvelopedObjectMessageProducer>(),
                     MessageConventions.Key,
-                    MessageConventions.Topic,
+                    topicConvention,
                     _serviceProvider.GetService<ILogger<ConventionalObjectMessageProducer<TMessage>>>()
                 );
             }

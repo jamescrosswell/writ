@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using Confluent.Kafka;
-using Confluent.Kafka.Serialization;
-using Microsoft.Extensions.Logging;
 
 namespace Messaging.Kafka
 {
@@ -39,6 +33,8 @@ namespace Messaging.Kafka
             message = fetched?.Repackage(fetched.Value as TMessage);
             return result;
         }
+
+        public void Subscribe(string topic) => _wrappedConsumer.Subscribe(topic);
 
         /// <summary>
         ///  <inheritdoc cref="IDisposable"/>

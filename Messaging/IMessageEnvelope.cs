@@ -30,13 +30,6 @@ namespace Messaging
         /// </value>
         string SenderHostname { get; }
         /// <summary>
-        /// Gets the created time.
-        /// </summary>
-        /// <value>
-        /// The created time.
-        /// </value>
-        DateTimeOffset CreatedTime { get; }
-        /// <summary>
         /// The enveloped message 
         /// </summary>
         /// <value>
