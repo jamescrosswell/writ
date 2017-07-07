@@ -1,17 +1,17 @@
 using System;
+using Newtonsoft.Json;
 
 namespace OptimisticKafka
 {
-    class MakeDeposit : Entity
+    class MakeDeposit : IEntity
     {
-        internal MakeDeposit()
-        {
-            
-        }
+        public Guid Id { get; }
+        public decimal Amount { get; }
 
+        [JsonConstructor]
         public MakeDeposit(Guid id, decimal amount)
-            : base(id)
         {
+            this.Id = id;
             this.Amount = amount;
         }
 
@@ -19,7 +19,5 @@ namespace OptimisticKafka
             : this(Guid.NewGuid(), amount)
         {
         }
-
-        public decimal Amount { get; }
     }
 }

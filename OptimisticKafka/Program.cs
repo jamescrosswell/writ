@@ -35,11 +35,15 @@ namespace OptimisticKafka
             string TopicConvention(Type entityType) => testTopic;
 
             var producerFactory = serviceProvider.GetRequiredService<EntityMessageProducerFactory>();
-            var consumerFactory = serviceProvider.GetRequiredService<EntityMessageConsumerFactory>();
             using (var producer = producerFactory.CreateProducer<MakeDeposit>(TopicConvention))
             {
-                using (var consumer = consumerFactory.CreateConsumer<MakeDeposit>(TopicConvention))
+                using (var consumer = serviceProvider.GetRequiredService<Consumer<string, object>>())
                 {
+                    consumer.Subscribe(testTopic);
+
+                    var dispatcher = serviceProvider.GetRequiredService<ObjectMessageDispatcher>();
+                    dispatcher.DispatchMessagesFor(consumer);
+
                     var cancelled = false;
                     Console.CancelKeyPress += (_, e) => {
                         e.Cancel = true; // prevent the process from terminating.
@@ -53,10 +57,7 @@ namespace OptimisticKafka
                         var deliveryReport  = producerTask.ContinueWith(LogDeliveryReport);
                         deliveryReport.GetAwaiter().GetResult();
 
-                        if (!consumer.Consume(out Message<string, MakeDeposit> msg, TimeSpan.FromSeconds(1))) continue;
-
-                        Console.WriteLine($"Topic: {msg.Topic} Partition: {msg.Partition} Offset: {msg.Offset}");
-                        Console.WriteLine($"{msg.Value}");
+                        consumer.Poll(TimeSpan.FromMilliseconds(100));
                     }
 
                 }
@@ -109,30 +110,12 @@ namespace OptimisticKafka
                     p.GetRequiredService <KafkaConfig>(),
                     p.GetRequiredService<IDeserializer<string>>(),
                     p.GetRequiredService<IDeserializer<object>>()));
-            services.AddSingleton<EntityMessageConsumerFactory>();
-            services.AddTransient<ObjectMessageConsumer>();
-            services.AddTransient<EnvelopedObjectMessageConsumer>();
+
+            services.AddTransient<ObjectMessageDispatcher>();
+            services.AddTransient<IObjectMessageHandler<MakeDeposit>, MakeDepositMessageHandler>();
+            services.AddTransient<IMessageHandler<string, object>, EnvelopedObjectMessageHandler<MakeDeposit>>();
 
             return services.BuildServiceProvider();
-        }
-
-        [SuppressMessage("ReSharper", "ClassNeverInstantiated.Local")]
-        private class EntityMessageConsumerFactory
-        {
-            private readonly IServiceProvider _serviceProvider;
-
-            public EntityMessageConsumerFactory(IServiceProvider serviceProvider)
-            {
-                _serviceProvider = serviceProvider;
-            }
-
-            public IObjectMessageConsumer CreateConsumer<TMessage>(EntityTopicConvention topicConvention)
-                where TMessage : Entity
-            {
-                var consumer = _serviceProvider.GetService<EnvelopedObjectMessageConsumer>();
-                consumer.Subscribe(topicConvention(typeof(TMessage)));
-                return consumer;
-            }
         }
 
         [SuppressMessage("ReSharper", "ClassNeverInstantiated.Local")]
@@ -146,7 +129,7 @@ namespace OptimisticKafka
             }
 
             public IObjectMessageProducer<TMessage> CreateProducer<TMessage>(EntityTopicConvention topicConvention)
-                where TMessage: Entity
+                where TMessage: class, IEntity
             {
                 return new ConventionalObjectMessageProducer<TMessage>(
                     _serviceProvider.GetService<EnvelopedObjectMessageProducer>(),
@@ -155,6 +138,15 @@ namespace OptimisticKafka
                     _serviceProvider.GetService<ILogger<ConventionalObjectMessageProducer<TMessage>>>()
                 );
             }
+        }
+    }
+
+    class MakeDepositMessageHandler : ObjectMessageHandler<MakeDeposit>
+    {
+        public override void Handle(Message<string, object> message, MakeDeposit value)
+        {
+            Console.WriteLine($"Topic: {message.Topic} Partition: {message.Partition} Offset: {message.Offset}");
+            Console.WriteLine($"Deposit received for ${value.Amount}");
         }
     }
 }

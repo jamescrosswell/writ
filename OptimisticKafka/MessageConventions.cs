@@ -1,8 +1,4 @@
-﻿using Confluent.Kafka.Serialization;
-using Messaging;
-using Messaging.Kafka;
-
-namespace OptimisticKafka
+﻿namespace OptimisticKafka
 {
     public static class MessageConventions
     {

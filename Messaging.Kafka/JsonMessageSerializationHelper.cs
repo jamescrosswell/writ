@@ -35,22 +35,4 @@ namespace Messaging.Kafka
             return JsonConvert.DeserializeObject(json, SerializerSettings);
         }
     }
-
-    public class JsonMessageSerializationHelper<TMessage> : ISerializer<TMessage>, IDeserializer<TMessage>
-    {
-        private readonly ISerializer<string> _stringSerializer = new StringSerializer(Encoding.UTF8);
-        private readonly IDeserializer<string> _stringDeserializer = new StringDeserializer(Encoding.UTF8);
-
-        public byte[] Serialize(TMessage data)
-        {
-            var json = JsonConvert.SerializeObject(data);
-            return _stringSerializer.Serialize(json);
-        }
-
-        public TMessage Deserialize(byte[] data)
-        {
-            var json = _stringDeserializer.Deserialize(data);
-            return JsonConvert.DeserializeObject<TMessage>(json);
-        }
-    }
 }

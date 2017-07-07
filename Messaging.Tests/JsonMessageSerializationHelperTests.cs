@@ -75,9 +75,9 @@ namespace Messaging.Tests
                 }
             };
 
-            var sut = new JsonMessageSerializationHelper<Animal>();
+            var sut = new JsonMessageSerializationHelper();
             var bytes = sut.Serialize(input);
-            var output = sut.Deserialize(bytes);
+            var output = (Animal)sut.Deserialize(bytes);
 
             Assert.Equal(input.Type, output.Type);
             Assert.NotNull(output.Color);
@@ -104,9 +104,9 @@ namespace Messaging.Tests
                 }
             };
 
-            var sut = new JsonMessageSerializationHelper<Animal<Color>>();
+            var sut = new JsonMessageSerializationHelper();
             var bytes = sut.Serialize(input);
-            var output = sut.Deserialize(bytes);
+            var output = (Animal<Color>)sut.Deserialize(bytes);
 
             Assert.Equal(input.Type, output.Type);
             Assert.NotNull(output.Attribute);
@@ -121,9 +121,9 @@ namespace Messaging.Tests
             var input = new Foo();
             var envelopedInput = (MessageEnvelope<Foo>)handler.Stuff(input);
 
-            var sut = new JsonMessageSerializationHelper<MessageEnvelope<Foo>>();
+            var sut = new JsonMessageSerializationHelper();
             var bytes = sut.Serialize(envelopedInput);
-            var envelopedOutput = sut.Deserialize(bytes);
+            var envelopedOutput = (MessageEnvelope<Foo>)sut.Deserialize(bytes);
 
             var output = handler.Open(envelopedOutput);
             Assert.Equal(input, output);
