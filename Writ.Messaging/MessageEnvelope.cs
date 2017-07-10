@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Messaging
+namespace Writ.Messaging
 {
     public class MessageEnvelope<TMessage> : IMessageEnvelope<TMessage>
     {

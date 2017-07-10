@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Messaging\Messaging.csproj" />
+    <ProjectReference Include="..\Writ.Messaging\Writ.Messaging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

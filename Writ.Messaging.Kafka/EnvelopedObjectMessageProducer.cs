@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Confluent.Kafka;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     /// <summary>
     /// This decorator allows us to wrap kafka object messages in an envelope that makes it easier to track

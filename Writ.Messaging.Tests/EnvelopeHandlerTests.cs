@@ -2,7 +2,7 @@ using System;
 using NSubstitute;
 using Xunit;
 
-namespace Messaging.Tests
+namespace Writ.Messaging.Tests
 {
     public class EnvelopeHandlerTests
     {

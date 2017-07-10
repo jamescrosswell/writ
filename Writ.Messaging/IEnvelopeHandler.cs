@@ -1,4 +1,4 @@
-﻿namespace Messaging
+﻿namespace Writ.Messaging
 {
     public interface IEnvelopeHandler
     {

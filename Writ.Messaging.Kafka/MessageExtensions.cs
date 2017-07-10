@@ -1,6 +1,6 @@
 ﻿using Confluent.Kafka;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     public static class MessageExtensions
     {

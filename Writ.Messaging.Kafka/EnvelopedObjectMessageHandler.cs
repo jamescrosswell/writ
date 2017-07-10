@@ -2,7 +2,7 @@ using System;
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     public class EnvelopedObjectMessageHandler<TMessageValue> : IMessageHandler<string, object>
         where TMessageValue : class

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Messaging
+﻿namespace Writ.Messaging
 {
     /// <summary>
     /// An envelope to <typeparam name="TMessage"></typeparam>

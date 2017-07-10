@@ -1,7 +1,7 @@
 using System;
 using Confluent.Kafka;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     public abstract class ObjectMessageHandler<TMessageValue> : IMessageHandler<string, object>, IObjectMessageHandler<TMessageValue> 
         where TMessageValue : class

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     /// <summary>
     /// Base class for writing objects to kafka. 

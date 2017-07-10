@@ -5,7 +5,7 @@ using Confluent.Kafka.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     /// <summary>
     /// A Json implementation of the <see cref="ISerializer{T}"></see> interface /> and

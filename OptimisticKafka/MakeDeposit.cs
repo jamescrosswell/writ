@@ -11,8 +11,8 @@ namespace OptimisticKafka
         [JsonConstructor]
         public MakeDeposit(Guid id, decimal amount)
         {
-            this.Id = id;
-            this.Amount = amount;
+            Id = id;
+            Amount = amount;
         }
 
         public MakeDeposit(decimal amount)

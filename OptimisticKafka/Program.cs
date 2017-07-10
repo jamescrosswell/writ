@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
-using Messaging;
-using Messaging.Kafka;
+using Writ.Messaging;
+using Writ.Messaging.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -82,6 +82,7 @@ namespace OptimisticKafka
             services.AddSingleton(p => new KafkaConfig(new Dictionary<string, object>
             {
                 { "group.id", "OptimisticKafka" },
+                { "num.partitions", 3 },
                 { "auto.offset.reset", "smallest" },
                 { "bootstrap.servers", BrokerList }
             }));
@@ -105,12 +106,14 @@ namespace OptimisticKafka
                 p.GetService<ObjectMessageProducer>(), p.GetService<IEnvelopeHandler>()));
             services.AddSingleton<EntityMessageProducerFactory>();
 
-            services.AddTransient(p =>
-                new Consumer<string, object>(
-                    p.GetRequiredService <KafkaConfig>(),
-                    p.GetRequiredService<IDeserializer<string>>(),
-                    p.GetRequiredService<IDeserializer<object>>()));
+            services.AddTransient<Consumer<string, object>>();
+            //services.AddTransient(p =>
+            //    new Consumer<string, object>(
+            //        p.GetRequiredService <KafkaConfig>(),
+            //        p.GetRequiredService<IDeserializer<string>>(),
+            //        p.GetRequiredService<IDeserializer<object>>()));
 
+            // TODO: Use container to resolve the appropriate handlers instead
             services.AddTransient<ObjectMessageDispatcher>();
             services.AddTransient<IObjectMessageHandler<MakeDeposit>, MakeDepositMessageHandler>();
             services.AddTransient<IMessageHandler<string, object>, EnvelopedObjectMessageHandler<MakeDeposit>>();

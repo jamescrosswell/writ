@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Confluent.Kafka;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     public interface IObjectMessageProducer: IDisposable
     {

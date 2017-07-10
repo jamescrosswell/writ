@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     public interface IObjectMessageProducer<in TEntity> : IObjectMessageProducer
     {

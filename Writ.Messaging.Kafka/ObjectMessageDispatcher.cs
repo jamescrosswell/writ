@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Confluent.Kafka;
 
-namespace Messaging.Kafka
+namespace Writ.Messaging.Kafka
 {
     public class ObjectMessageDispatcher : IDisposable
     {

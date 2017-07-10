@@ -1,4 +1,4 @@
-﻿namespace Messaging
+﻿namespace Writ.Messaging
 {
     /// <summary>
     /// Message Handler

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Messaging.Kafka;
+using Writ.Messaging.Kafka;
 using Xunit;
 
-namespace Messaging.Tests
+namespace Writ.Messaging.Tests
 {
     public class JsonMessageSerializationHelperTests
     {

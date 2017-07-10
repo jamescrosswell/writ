@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Messaging
+namespace Writ.Messaging
 {
     public class EnvelopeHandler : IEnvelopeHandler
     {
