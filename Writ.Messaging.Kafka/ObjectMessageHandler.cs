@@ -3,15 +3,15 @@ using Confluent.Kafka;
 
 namespace Writ.Messaging.Kafka
 {
-    public abstract class ObjectMessageHandler<TMessageValue> : IMessageHandler<string, object>, IObjectMessageHandler<TMessageValue> 
+    public abstract class ObjectMessageHandler<TKey, TMessageValue> : IMessageHandler<TKey, object>, IObjectMessageHandler<TKey, TMessageValue> 
         where TMessageValue : class
     {
-        void IMessageHandler<string, object>.Handle(Message<string, object> message)
+        public void Handle(Message<TKey, object> message)
         {
             if (message?.Value is TMessageValue value)
                 Handle(message, value);
         }
 
-        public abstract void Handle(Message<string, object> message, TMessageValue value);
+        public abstract void Handle(Message<TKey, object> message, TMessageValue value);
     }
 }

@@ -4,9 +4,9 @@ using Confluent.Kafka;
 
 namespace Writ.Messaging.Kafka
 {
-    public interface IObjectMessageProducer: IDisposable
+    public interface IObjectMessageProducer<TKey> : IDisposable
     {
-        Task<Message<string, object>> ProduceAsync<TMessage>(string topic, string key, TMessage value);
+        Task<Message<TKey, object>> ProduceAsync<TMessage>(string topic, TKey key, TMessage value);
 
         /// <summary>
         /// Gets the name of this producer instance (typically this would be unique).

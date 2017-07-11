@@ -2,8 +2,8 @@ using Confluent.Kafka;
 
 namespace Writ.Messaging.Kafka
 {
-    public interface IObjectMessageHandler<in TMessageValue>
+    public interface IObjectMessageHandler<TKey, in TMessageValue>
     {
-        void Handle(Message<string, object> message, TMessageValue value);
+        void Handle(Message<TKey, object> message, TMessageValue value);
     }
 }

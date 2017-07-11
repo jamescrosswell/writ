@@ -3,6 +3,12 @@ using System.IO;
 
 namespace Writ.Messaging
 {
+
+    public interface IApplicationNameResolver
+    {
+        string ApplicationName { get; }
+    }
+
     public class EnvelopeHandler : IEnvelopeHandler
     {
         private readonly string _applicationName;
@@ -12,6 +18,11 @@ namespace Writ.Messaging
         {
             _applicationName = applicationName;
             _correlationProvider = correlationProvider ?? throw new ArgumentNullException(nameof(correlationProvider));
+        }
+
+        public EnvelopeHandler(IApplicationNameResolver applicationNameResolver, CorrelationProvider correlationProvider)
+            : this(applicationNameResolver?.ApplicationName, correlationProvider)
+        {
         }
 
         /// <inheritdoc cref="IEnvelopeHandler"/>

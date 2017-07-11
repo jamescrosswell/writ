@@ -18,9 +18,12 @@ namespace OptimisticKafka
 
         private static void Main(string[] args)
         {
+            // Create a temporary topic for these tests
+            string testTopic = $"OptimisticKafka_{Guid.NewGuid()}";
+
             //setup our DI
             var serviceCollection = new ServiceCollection();
-            var serviceProvider = ConfigureServices(serviceCollection);
+            var serviceProvider = ConfigureServices(serviceCollection, entityType => testTopic);
 
             //configure console logging
             serviceProvider
@@ -30,22 +33,18 @@ namespace OptimisticKafka
             var logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger<Program>();
             logger.LogDebug("Starting application");
 
-            // Create a temporary topic for these tests
-            string testTopic = $"OptimisticKafka_{Guid.NewGuid()}";
-            string TopicConvention(Type entityType) => testTopic;
-
-            var producerFactory = serviceProvider.GetRequiredService<EntityMessageProducerFactory>();
-            using (var producer = producerFactory.CreateProducer<MakeDeposit>(TopicConvention))
+            using (var producer = serviceProvider.GetRequiredService<ConventionalObjectMessageProducer<string, object>>())
             {
                 using (var consumer = serviceProvider.GetRequiredService<Consumer<string, object>>())
                 {
                     consumer.Subscribe(testTopic);
 
-                    var dispatcher = serviceProvider.GetRequiredService<ObjectMessageDispatcher>();
+                    var dispatcher = serviceProvider.GetRequiredService<ObjectMessageDispatcher<string>>();
                     dispatcher.DispatchMessagesFor(consumer);
 
                     var cancelled = false;
-                    Console.CancelKeyPress += (_, e) => {
+                    Console.CancelKeyPress += (_, e) =>
+                    {
                         e.Cancel = true; // prevent the process from terminating.
                         cancelled = true;
                     };
@@ -54,7 +53,7 @@ namespace OptimisticKafka
                     while (!cancelled)
                     {
                         var producerTask = producer.ProduceAsync(new MakeDeposit(10m));
-                        var deliveryReport  = producerTask.ContinueWith(LogDeliveryReport);
+                        var deliveryReport = producerTask.ContinueWith(LogDeliveryReport);
                         deliveryReport.GetAwaiter().GetResult();
 
                         consumer.Poll(TimeSpan.FromMilliseconds(100));
@@ -69,82 +68,29 @@ namespace OptimisticKafka
             }
         }
 
-        private static IServiceProvider ConfigureServices(IServiceCollection services)
+        private static IServiceProvider ConfigureServices(IServiceCollection services, EntityTopicConvention topicConvention)
         {
             services.AddLogging();
 
-            services.AddScoped<CorrelationProvider>(p => () => Guid.NewGuid().ToString());
-
-            services.AddTransient<IEnvelopeHandler>(p => new EnvelopeHandler(
-                applicationName: "OptimisticKafka", correlationProvider: p.GetService<CorrelationProvider>())
-                );
-
-            services.AddSingleton(p => new KafkaConfig(new Dictionary<string, object>
+            const string applicationName = "OptimisticKafka";
+            var writServices = new WritKafkaServices<string, object>(applicationName, new KafkaConfig
             {
-                { "group.id", "OptimisticKafka" },
-                { "num.partitions", 3 },
-                { "auto.offset.reset", "smallest" },
-                { "bootstrap.servers", BrokerList }
-            }));
+                BrokerList = BrokerList,
+                AutoOffset = "smallest",
+                GroupId = applicationName
+            });
+            writServices.UseKeySerializers(new StringSerializer(Encoding.UTF8), new StringDeserializer(Encoding.UTF8));
+            writServices.UseObjectSerialization(new JsonMessageSerializationHelper());
+            writServices.UseConventions(topicConvention ?? MessageConventions.Topic, MessageConventions.Key);
+            services.AddWrit(writServices);
 
-            services.AddSingleton<ISerializer<string>>(p => new StringSerializer(Encoding.UTF8));
-            services.AddSingleton<IDeserializer<string>>(p => new StringDeserializer(Encoding.UTF8));
-            services.AddSingleton<JsonMessageSerializationHelper>();
-            services.AddSingleton<ISerializer<object>>(p => p.GetRequiredService<JsonMessageSerializationHelper>());
-            services.AddSingleton<IDeserializer<object>>(p => p.GetRequiredService<JsonMessageSerializationHelper>());
-
-            services.AddTransient<ISerializingProducer<string, object>>(
-                p => new Producer<string, object>(
-                    p.GetService<KafkaConfig>(),
-                    p.GetService<ISerializer<string>>(), 
-                    p.GetService<ISerializer<object>>()
-                    ));
-
-            // Register decorator chain ConventionalObjectMessageProducer → EnvelopedObjectMessageProducer → ObjectMessageProducer
-            services.AddTransient<ObjectMessageProducer>();
-            services.AddTransient(p => new EnvelopedObjectMessageProducer(
-                p.GetService<ObjectMessageProducer>(), p.GetService<IEnvelopeHandler>()));
-            services.AddSingleton<EntityMessageProducerFactory>();
-
-            services.AddTransient<Consumer<string, object>>();
-            //services.AddTransient(p =>
-            //    new Consumer<string, object>(
-            //        p.GetRequiredService <KafkaConfig>(),
-            //        p.GetRequiredService<IDeserializer<string>>(),
-            //        p.GetRequiredService<IDeserializer<object>>()));
-
-            // TODO: Use container to resolve the appropriate handlers instead
-            services.AddTransient<ObjectMessageDispatcher>();
-            services.AddTransient<IObjectMessageHandler<MakeDeposit>, MakeDepositMessageHandler>();
-            services.AddTransient<IMessageHandler<string, object>, EnvelopedObjectMessageHandler<MakeDeposit>>();
+            services.AddHandler<string, MakeDeposit, MakeDepositMessageHandler>();
 
             return services.BuildServiceProvider();
         }
-
-        [SuppressMessage("ReSharper", "ClassNeverInstantiated.Local")]
-        private class EntityMessageProducerFactory
-        {
-            private readonly IServiceProvider _serviceProvider;
-
-            public EntityMessageProducerFactory(IServiceProvider serviceProvider)
-            {
-                _serviceProvider = serviceProvider;
-            }
-
-            public IObjectMessageProducer<TMessage> CreateProducer<TMessage>(EntityTopicConvention topicConvention)
-                where TMessage: class, IEntity
-            {
-                return new ConventionalObjectMessageProducer<TMessage>(
-                    _serviceProvider.GetService<EnvelopedObjectMessageProducer>(),
-                    MessageConventions.Key,
-                    topicConvention,
-                    _serviceProvider.GetService<ILogger<ConventionalObjectMessageProducer<TMessage>>>()
-                );
-            }
-        }
     }
 
-    class MakeDepositMessageHandler : ObjectMessageHandler<MakeDeposit>
+    class MakeDepositMessageHandler : ObjectMessageHandler<string, MakeDeposit>
     {
         public override void Handle(Message<string, object> message, MakeDeposit value)
         {
