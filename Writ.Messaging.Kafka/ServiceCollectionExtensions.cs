@@ -30,6 +30,17 @@ namespace Writ.Messaging.Kafka
             services.AddTransient(envelopedHandlerType, typeof(EnvelopedObjectMessageHandler<TKey, TMessageValue>));
         }
 
+        public static void AddSingletonHandler<TKey, TMessageValue, TMessageHandler>(this IServiceCollection services, TMessageHandler handler)
+            where TMessageValue : class
+            where TMessageHandler : class, IObjectMessageHandler<TKey, TMessageValue>
+        {
+            services.AddSingleton<IObjectMessageHandler<TKey, TMessageValue>>(handler);
+
+            var envelopeType = typeof(MessageEnvelope<>).MakeGenericType(typeof(TMessageValue));
+            var envelopedHandlerType = typeof(IMessageHandler<,>).MakeGenericType(typeof(TKey), envelopeType);
+            services.AddSingleton(envelopedHandlerType, typeof(EnvelopedObjectMessageHandler<TKey, TMessageValue>));
+        }
+
         public static WritKafkaServices<TKey, TEntityBase> UseCorrelationProvider<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices, CorrelationProvider correlationProvider)
         {
             writServices.CorrelationProvider = correlationProvider ?? throw new ArgumentNullException(nameof(correlationProvider));
@@ -42,6 +53,13 @@ namespace Writ.Messaging.Kafka
             writServices.KeySerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             writServices.KeyDeserializer = deserializer ?? throw new ArgumentNullException(nameof(deserializer));
             return writServices;
+        }
+
+        public static WritKafkaServices<TKey, TEntityBase> UseKeySerialization<TKey, TEntityBase, TSerializer>(this WritKafkaServices<TKey, TEntityBase> writServices,
+            TSerializer serializationHelper)
+            where TSerializer : ISerializer<TKey>, IDeserializer<TKey>
+        {
+            return writServices.UseKeySerializers(serializationHelper, serializationHelper);
         }
 
         public static WritKafkaServices<TKey, TEntityBase> UseObjectSerializers<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices,
@@ -59,10 +77,16 @@ namespace Writ.Messaging.Kafka
             return writServices.UseObjectSerializers(serializationHelper, serializationHelper);
         }
 
-        public static WritKafkaServices<TKey, TEntityBase> UseConventions<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices,
-            EntityTopicConvention topicConvention, EntityKeyConvention<TKey, TEntityBase> keyConvention)
+        public static WritKafkaServices<TKey, TEntityBase> UseTopicConvention<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices,
+            EntityTopicConvention topicConvention)
         {
             writServices.TopicConvention = topicConvention;
+            return writServices;
+        }
+
+        public static WritKafkaServices<TKey, TEntityBase> UseKeyConvention<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices,
+            EntityKeyConvention<TEntityBase, TKey> keyConvention)
+        {
             writServices.KeyConvention = keyConvention;
             return writServices;
         }
@@ -79,7 +103,7 @@ namespace Writ.Messaging.Kafka
         public ISerializer<TEntityBase> ObjectSerializer { get; set; }
         public IDeserializer<TEntityBase> ObjectDeserializer { get; set; }
         public EntityTopicConvention TopicConvention { get; set; }
-        public EntityKeyConvention<TKey, TEntityBase> KeyConvention { get; set; }
+        public EntityKeyConvention<TEntityBase, TKey> KeyConvention { get; set; }
 
         public WritKafkaServices(string applicationName, KafkaConfig kafkaConfig)
         {
@@ -89,6 +113,8 @@ namespace Writ.Messaging.Kafka
             // Set defaults
             CorrelationProvider = () => Guid.NewGuid().ToString(); 
             UseEnvelopes = true;
+            KeyConvention = MessageConventions.DefaultKeyConvention<TEntityBase, TKey>();
+            TopicConvention = MessageConventions.DefaultTopic;
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -128,7 +154,7 @@ namespace Writ.Messaging.Kafka
             services.AddTransient(p => new ConventionalObjectMessageProducer<TKey, TEntityBase>(
                 p.GetService<EnvelopedObjectMessageProducer<TKey>>(), 
                 p.GetRequiredService<EntityTopicConvention>(), 
-                p.GetRequiredService<EntityKeyConvention<TKey, TEntityBase>>(), 
+                p.GetRequiredService<EntityKeyConvention<TEntityBase, TKey>>(), 
                 p.GetService<ILogger<ConventionalObjectMessageProducer<TKey, TEntityBase>>>()
                 ));
 

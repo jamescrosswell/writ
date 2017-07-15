@@ -1,24 +1,21 @@
-﻿using System;
-using System.Dynamic;
-using System.Text;
-using Confluent.Kafka.Serialization;
+﻿using Confluent.Kafka.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text;
 
-namespace Writ.Messaging.Kafka
+namespace Writ.Messaging.Kafka.Serialization
 {
     /// <summary>
     /// A Json implementation of the <see cref="ISerializer{T}"></see> interface /> and
     /// <see cref="IDeserializer{T}"/> intefaces for Kafka.
     /// </summary>
-    public class JsonMessageSerializationHelper : ISerializer<object>, IDeserializer<object>
+    public class JsonSerialization : ISerializer<object>, IDeserializer<object>
     {
         private readonly ISerializer<string> _stringSerializer = new StringSerializer(Encoding.UTF8);
         private readonly IDeserializer<string> _stringDeserializer = new StringDeserializer(Encoding.UTF8);
 
         static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings();
 
-        static JsonMessageSerializationHelper()
+        static JsonSerialization()
         {
             SerializerSettings.TypeNameHandling = TypeNameHandling.All;
         }

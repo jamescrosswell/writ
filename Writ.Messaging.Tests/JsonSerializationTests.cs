@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Writ.Messaging.Kafka;
+using Writ.Messaging.Kafka.Serialization;
 using Xunit;
 
 namespace Writ.Messaging.Tests
 {
-    public class JsonMessageSerializationHelperTests
+    public class JsonSerializationTests
     {
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
         private sealed class Foo
@@ -43,7 +43,7 @@ namespace Writ.Messaging.Tests
         {
             var input = new Foo();
 
-            var sut = new JsonMessageSerializationHelper();
+            var sut = new JsonSerialization();
             var bytes = sut.Serialize(input);
             var output = sut.Deserialize(bytes);
 
@@ -75,7 +75,7 @@ namespace Writ.Messaging.Tests
                 }
             };
 
-            var sut = new JsonMessageSerializationHelper();
+            var sut = new JsonSerialization();
             var bytes = sut.Serialize(input);
             var output = (Animal)sut.Deserialize(bytes);
 
@@ -104,7 +104,7 @@ namespace Writ.Messaging.Tests
                 }
             };
 
-            var sut = new JsonMessageSerializationHelper();
+            var sut = new JsonSerialization();
             var bytes = sut.Serialize(input);
             var output = (Animal<Color>)sut.Deserialize(bytes);
 
@@ -121,7 +121,7 @@ namespace Writ.Messaging.Tests
             var input = new Foo();
             var envelopedInput = (MessageEnvelope<Foo>)handler.Stuff(input);
 
-            var sut = new JsonMessageSerializationHelper();
+            var sut = new JsonSerialization();
             var bytes = sut.Serialize(envelopedInput);
             var envelopedOutput = (MessageEnvelope<Foo>)sut.Deserialize(bytes);
 

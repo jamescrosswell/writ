@@ -8,12 +8,10 @@ namespace Writ.Messaging.Kafka
     {
         private readonly IServiceProvider _serviceProvider;
         private Consumer<TKey, object> _consumer;
-        private readonly IEnumerable<IMessageHandler<TKey, object>> _messageHandlers;
 
-        public ObjectMessageDispatcher(IServiceProvider serviceProvider, IEnumerable<IMessageHandler<TKey, object>> messageHandlers)
+        public ObjectMessageDispatcher(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _messageHandlers = messageHandlers ?? throw new ArgumentNullException(nameof(messageHandlers));
         }
 
         public void DispatchMessagesFor(Consumer<TKey, object> consumer)

@@ -1,17 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OptimisticKafka", "OptimisticKafka\OptimisticKafka.csproj", "{563B2441-5635-495F-B38C-EF8E057F78D9}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B0323E80-757C-4082-9EEC-FD1FB58439F8}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		readme.md = readme.md
 	EndProjectSection
-EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{658DD44C-4076-47DF-8FAE-79C35AE942F5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4BABD1BF-A879-4CCE-B9E2-328179D6F85C}"
 EndProject
@@ -23,9 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Writ.Messaging.Kafka", "Wri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Writ.Messaging.Tests", "Writ.Messaging.Tests\Writ.Messaging.Tests.csproj", "{FF90378D-A641-4358-9A30-E0CFA212ECE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Writ.Messaging.Kafka.Tests", "Writ.Messaging.Kafka.Tests\Writ.Messaging.Kafka.Tests.csproj", "{92BF9427-B5BF-45AF-A83F-0EED5355EDDF}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{6F709781-FBBA-4AD9-96E4-C9203A1A8EC4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Writ.Messaging.Kafka.Tests", "Writ.Messaging.Kafka.Tests\Writ.Messaging.Kafka.Tests.csproj", "{92BF9427-B5BF-45AF-A83F-0EED5355EDDF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,14 +27,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{563B2441-5635-495F-B38C-EF8E057F78D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{563B2441-5635-495F-B38C-EF8E057F78D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{563B2441-5635-495F-B38C-EF8E057F78D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{563B2441-5635-495F-B38C-EF8E057F78D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{658DD44C-4076-47DF-8FAE-79C35AE942F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{658DD44C-4076-47DF-8FAE-79C35AE942F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{658DD44C-4076-47DF-8FAE-79C35AE942F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{658DD44C-4076-47DF-8FAE-79C35AE942F5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AF2B718A-99CF-4248-8B00-FB123E9D85E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AF2B718A-99CF-4248-8B00-FB123E9D85E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF2B718A-99CF-4248-8B00-FB123E9D85E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -62,10 +48,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{563B2441-5635-495F-B38C-EF8E057F78D9} = {6F709781-FBBA-4AD9-96E4-C9203A1A8EC4}
-		{658DD44C-4076-47DF-8FAE-79C35AE942F5} = {B0323E80-757C-4082-9EEC-FD1FB58439F8}
 		{AF2B718A-99CF-4248-8B00-FB123E9D85E2} = {38C8546A-A6F9-4A17-9619-8E6FA8E181D2}
 		{BA956DEA-0FEA-42A6-A39A-2588193E3862} = {38C8546A-A6F9-4A17-9619-8E6FA8E181D2}
 		{FF90378D-A641-4358-9A30-E0CFA212ECE5} = {4BABD1BF-A879-4CCE-B9E2-328179D6F85C}
+		{92BF9427-B5BF-45AF-A83F-0EED5355EDDF} = {4BABD1BF-A879-4CCE-B9E2-328179D6F85C}
 	EndGlobalSection
 EndGlobal

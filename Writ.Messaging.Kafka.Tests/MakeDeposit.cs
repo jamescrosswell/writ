@@ -1,9 +1,9 @@
 using System;
 using Newtonsoft.Json;
 
-namespace OptimisticKafka
+namespace Writ.Messaging.Kafka.Tests
 {
-    class MakeDeposit : IEntity
+    class MakeDeposit
     {
         public Guid Id { get; }
         public decimal Amount { get; }

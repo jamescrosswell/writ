@@ -11,7 +11,7 @@ namespace Writ.Messaging.Kafka
     }
 
     public delegate string EntityTopicConvention(Type entityType);
-    public delegate TKey EntityKeyConvention<out TKey, in TEntity>(TEntity entity);
+    public delegate TKey EntityKeyConvention<in TEntity, out TKey>(TEntity entity);
 
     /// <summary>
     /// This decorator makes it easy to implement conventions regarding message keys and topic names 
@@ -22,7 +22,7 @@ namespace Writ.Messaging.Kafka
         //public delegate TKey EntityKeyConvention(TEntity entity);
 
         private readonly IObjectMessageProducer<TKey> _wrappedProducer;
-        private readonly EntityKeyConvention<TKey, TEntity> _keyConvention;
+        private readonly EntityKeyConvention<TEntity, TKey> _keyConvention;
         private readonly EntityTopicConvention _topicConvention;
         private readonly ILogger<ConventionalObjectMessageProducer<TKey, TEntity>> _logger;
         public string Name => _wrappedProducer.Name;
@@ -37,7 +37,7 @@ namespace Writ.Messaging.Kafka
         public ConventionalObjectMessageProducer(
             IObjectMessageProducer<TKey> producer, 
             EntityTopicConvention topicConvention, 
-            EntityKeyConvention<TKey, TEntity> keyConvention, 
+            EntityKeyConvention<TEntity, TKey> keyConvention, 
             ILogger<ConventionalObjectMessageProducer<TKey, TEntity>> logger
             )
         {
