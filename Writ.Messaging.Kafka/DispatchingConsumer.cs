@@ -1,34 +1,35 @@
 ﻿using Confluent.Kafka;
 using System;
-using System.Collections.Generic;
+using Confluent.Kafka.Serialization;
 
 namespace Writ.Messaging.Kafka
 {
-    public class ObjectMessageDispatcher<TKey> : IDisposable
+    /// <summary>
+    /// This consumer has it's own OnMessage event handler that dispatches messages 
+    /// to any appropriate message handlers that have been registered as services.
+    /// </summary>
+    public class DispatchingConsumer<TKey, TValue> : Consumer<TKey, TValue>
     {
         private readonly IServiceProvider _serviceProvider;
-        private Consumer<TKey, object> _consumer;
 
-        public ObjectMessageDispatcher(IServiceProvider serviceProvider)
+        public DispatchingConsumer(
+            IServiceProvider serviceProvider, 
+            KafkaConfig config, 
+            IDeserializer<TKey> keyDeserializer, 
+            IDeserializer<TValue> valueDeserializer
+            ) : base(config, keyDeserializer, valueDeserializer)
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            OnMessage += DispatchMessage;
         }
 
-        public void DispatchMessagesFor(Consumer<TKey, object> consumer)
-        {
-            if (_consumer != null)
-                throw new InvalidOperationException("This dispatcher is already initialized");
-            _consumer = consumer ?? throw new ArgumentNullException(nameof(consumer));
-            _consumer.OnMessage += OnConsumerMessage; 
-        }
-
-        private void OnConsumerMessage(object sender, Message<TKey, object> message)
+        private void DispatchMessage(object sender, Message<TKey, TValue> message)
         {
             if (message.Value == null)
                 return;
             var handlerType = typeof(IMessageHandler<,>).MakeGenericType(typeof(TKey), message.Value.GetType());
             var handler = _serviceProvider.GetService(handlerType);
-            if (handler is IMessageHandler<TKey, object> messageHandler)
+            if (handler is IMessageHandler<TKey, TValue> messageHandler)
             {
                 messageHandler.Handle(message);
             }
@@ -39,12 +40,6 @@ namespace Writ.Messaging.Kafka
             //{
             //    handler.Handle(message);
             //}
-
-        }
-
-        public void Dispose()
-        {
-            _consumer.OnMessage -= OnConsumerMessage;
         }
     }
 }

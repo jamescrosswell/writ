@@ -22,8 +22,8 @@ namespace Writ.Messaging.Kafka
         //public delegate TKey EntityKeyConvention(TEntity entity);
 
         private readonly IObjectMessageProducer<TKey> _wrappedProducer;
-        private readonly EntityKeyConvention<TEntity, TKey> _keyConvention;
         private readonly EntityTopicConvention _topicConvention;
+        private readonly EntityKeyConvention<TEntity, TKey> _keyConvention;
         private readonly ILogger<ConventionalObjectMessageProducer<TKey, TEntity>> _logger;
         public string Name => _wrappedProducer.Name;
 

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Authentication.ExtendedProtection;
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace Writ.Messaging.Kafka
 {
@@ -28,17 +26,6 @@ namespace Writ.Messaging.Kafka
             var envelopeType = typeof(MessageEnvelope<>).MakeGenericType(typeof(TMessageValue));
             var envelopedHandlerType = typeof(IMessageHandler<,>).MakeGenericType(typeof(TKey), envelopeType);
             services.AddTransient(envelopedHandlerType, typeof(EnvelopedObjectMessageHandler<TKey, TMessageValue>));
-        }
-
-        public static void AddSingletonHandler<TKey, TMessageValue, TMessageHandler>(this IServiceCollection services, TMessageHandler handler)
-            where TMessageValue : class
-            where TMessageHandler : class, IObjectMessageHandler<TKey, TMessageValue>
-        {
-            services.AddSingleton<IObjectMessageHandler<TKey, TMessageValue>>(handler);
-
-            var envelopeType = typeof(MessageEnvelope<>).MakeGenericType(typeof(TMessageValue));
-            var envelopedHandlerType = typeof(IMessageHandler<,>).MakeGenericType(typeof(TKey), envelopeType);
-            services.AddSingleton(envelopedHandlerType, typeof(EnvelopedObjectMessageHandler<TKey, TMessageValue>));
         }
 
         public static WritKafkaServices<TKey, TEntityBase> UseCorrelationProvider<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices, CorrelationProvider correlationProvider)
@@ -158,13 +145,8 @@ namespace Writ.Messaging.Kafka
                 p.GetService<ILogger<ConventionalObjectMessageProducer<TKey, TEntityBase>>>()
                 ));
 
-            services.AddTransient(p =>
-                new Consumer<TKey, TEntityBase>(
-                    p.GetRequiredService<KafkaConfig>(),
-                    p.GetRequiredService<IDeserializer<TKey>>(),
-                    p.GetRequiredService<IDeserializer<TEntityBase>>()));
-
-            services.AddTransient<ObjectMessageDispatcher<TKey>>();
+            services.AddTransient<DispatchingConsumer<TKey, TEntityBase>>();
+            services.AddTransient<Consumer<TKey, TEntityBase>, DispatchingConsumer<TKey, TEntityBase>>();                       
         }
     }
 }

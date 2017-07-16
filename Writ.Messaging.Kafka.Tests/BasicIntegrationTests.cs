@@ -13,22 +13,22 @@ namespace Writ.Messaging.Kafka.Tests
     {
         private sealed class Fixture
         {
-            const string brokerList = "localhost:9092";
-            private readonly string testPrefix = $"{nameof(BasicIntegrationTests)}_{Guid.NewGuid()}";
-
-            public EntityTopicConvention TestTopicConvention => entityType => $"{testPrefix}_{MessageConventions.DefaultTopic(entityType)}";
+            const string ApplicationName = nameof(BasicIntegrationTests);
+            const string BrokerList = "localhost:9092";
+            private readonly string _testPrefix = $"{nameof(BasicIntegrationTests)}_{Guid.NewGuid()}";
+            public EntityTopicConvention TestTopicConvention =>
+                entityType => $"{_testPrefix}_{MessageConventions.DefaultTopic(entityType)}";
 
             public IServiceCollection ConfigureServices()
             {
                 IServiceCollection services = new ServiceCollection();
                 services.AddLogging();
 
-                const string applicationName = nameof(BasicIntegrationTests);
-                var writServices = new WritKafkaServices<string, object>(applicationName, new KafkaConfig
+                var writServices = new WritKafkaServices<string, object>(ApplicationName, new KafkaConfig
                 {
-                    BrokerList = brokerList,
+                    BrokerList = BrokerList,
                     AutoOffset = "smallest",
-                    GroupId = applicationName
+                    GroupId = ApplicationName
                 });
                 writServices.UseKeySerialization(new StringSerialization());
                 writServices.UseObjectSerialization(new JsonSerialization());
@@ -52,8 +52,8 @@ namespace Writ.Messaging.Kafka.Tests
         {
             //setup our DI
             var serviceCollection = _fixture.ConfigureServices();
-            var testMessageHandler = new TestMessageHandler();
-            serviceCollection.AddSingletonHandler<string, Test, TestMessageHandler>(testMessageHandler);
+            serviceCollection.AddSingleton<ApplicationState>();
+            serviceCollection.AddHandler<string, Test, TestMessageHandler>();
             var serviceProvider = serviceCollection.BuildServiceProvider();
 
             var sent = new Test{ Id = 1, Name = "Foo" };
@@ -64,31 +64,41 @@ namespace Writ.Messaging.Kafka.Tests
             }
 
             var topicForType = _fixture.TestTopicConvention;
+            var applicationState = serviceProvider.GetRequiredService<ApplicationState>();
             using (var consumer = serviceProvider.GetRequiredService<Consumer<string, object>>())
             {
                 consumer.Subscribe(topicForType(typeof(Test)));
 
-                var dispatcher = serviceProvider.GetRequiredService<ObjectMessageDispatcher<string>>();
-                dispatcher.DispatchMessagesFor(consumer);
-
-                while (!testMessageHandler.Received.Any())
+                while (!applicationState.Received.Any())
                 {
                     consumer.Poll(TimeSpan.FromMilliseconds(100));
                 }
             }
 
-            var received = testMessageHandler.Received.First();
+            var received = applicationState.Received.First();
             Assert.Equal(sent.Id, received.Id);
             Assert.Equal(sent.Name, received.Name);
         }
 
-        class TestMessageHandler : ObjectMessageHandler<string, Test>
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class ApplicationState
         {
             public List<Test> Received { get; } = new List<Test>();
+        }
+
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class TestMessageHandler : ObjectMessageHandler<string, Test>
+        {
+            private readonly ApplicationState _applicationState;
+
+            public TestMessageHandler(ApplicationState applicationState)
+            {
+                _applicationState = applicationState;
+            }
 
             public override void Handle(Message<string, object> message, Test value)
             {
-                Received.Add(value);
+                _applicationState.Received.Add(value);
             }
         }
     }
