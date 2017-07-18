@@ -33,16 +33,14 @@ namespace Writ.Messaging.Kafka.Events
 
         private string GetCommandTopic(Type type)
         {
-            var aggregateRootType = type.GetInterfaces()
-                .SingleOrDefault(i => i.GetGenericTypeDefinition() == typeof(ICommand<,>))
-                ?.GenericTypeArguments.First();
+            var genericInterfaceTypeDefinition = GetGenericInterfaceTypeDefinition(type, typeof(ICommand<,>));
+            var aggregateRootType = genericInterfaceTypeDefinition?.GenericTypeArguments.First();
             return GetAggregateRootInfo(aggregateRootType)?.CommandTopic;
         }
 
         private string GetCommandFailureTopic(Type type)
         {
-            var failureType = type.GetInterfaces()
-                .SingleOrDefault(i => i.GetGenericTypeDefinition() == typeof(ICommandFailure<,>));
+            var failureType = GetGenericInterfaceTypeDefinition(type, typeof(ICommandFailure<,>));
             return (failureType != null)
                 ? CommandFailureTopic
                 : null;
@@ -50,10 +48,32 @@ namespace Writ.Messaging.Kafka.Events
 
         private string GetEventTopic(Type type)
         {
-            var aggregateRootType = type.GetInterfaces()
-                .SingleOrDefault(i => i.GetGenericTypeDefinition() == typeof(IEvent<,>))
-                ?.GenericTypeArguments.First();
+            var genericInterfaceTypeDefinition = GetGenericInterfaceTypeDefinition(type, typeof(IEvent<,>));
+            var aggregateRootType = genericInterfaceTypeDefinition?.GenericTypeArguments.First();
             return GetAggregateRootInfo(aggregateRootType)?.EventTopic;
+        }
+
+        /// <summary>
+        /// This one needs some commentary. We want to inspect the definition of a generic 
+        /// interface for a type... however we're not sure if the type IS an interface type
+        /// or if it's a class that IMPLEMENTS an interface. The code is necessarily a bit
+        /// messy then and we don't want it poluting all the other methods here
+        /// </summary>
+        /// <param name="type">The interface or class type to inspect</param>
+        /// <param name="interfaceType">The type of the generic interface that we want the type definition for</param>
+        private Type GetGenericInterfaceTypeDefinition(Type type, Type interfaceType)
+        {
+            // type can be an interface and an interface doesn't implement itself.
+            // typeof(IEvent<int,int>).GetInterfaces() does not contain IEvent<int,int>!
+            var typeInfo = type.GetTypeInfo();
+            var isInterfaceType = typeInfo.IsInterface && typeInfo.IsGenericType &&
+                                  typeInfo.GetGenericTypeDefinition() == interfaceType;
+            return isInterfaceType
+                 ? type
+                 // Alternatively the type might merely implement the interface we're looking for
+                 : type
+                    .GetInterfaces()
+                    .SingleOrDefault(i => i.GetGenericTypeDefinition() == interfaceType);
         }
 
         public AggregateRootInfo GetAggregateRootInfo<TAggregateRoot>()

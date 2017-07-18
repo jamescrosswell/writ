@@ -12,4 +12,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Sample.EventStore\Sample.EventStore.csproj" />
+  </ItemGroup>
+
 </Project>

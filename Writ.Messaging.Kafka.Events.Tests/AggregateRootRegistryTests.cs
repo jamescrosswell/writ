@@ -34,15 +34,43 @@ namespace Writ.Messaging.Kafka.Events.Tests
         }
 
         [Fact]
+        public void TopicConvention_ReturnsAggregateCommandTopicForInterface()
+        {
+            // Given an aggregate root
+            var sut = _fixture.GetSut();
+
+            // When I get the topic for a command interface
+            var result = sut.TopicConvention(typeof(ICommand<Test, int>));
+
+            // The result is the aggregate command topic
+            var aggregateInfo = sut.GetAggregateRootInfo<Test>();
+            Assert.Equal(aggregateInfo.CommandTopic, result);
+        }
+
+        [Fact]
         public void TopicConvention_ReturnsAggregateEventTopic()
         {
             // Given an aggregate root
             var sut = _fixture.GetSut();
 
-            // When I get the topic for a command
+            // When I get the topic for an event
             var result = sut.TopicConvention(typeof(TestCreated));
 
-            // The result is the aggregate command topic
+            // The result is the aggregate event topic
+            var aggregateInfo = sut.GetAggregateRootInfo<Test>();
+            Assert.Equal(aggregateInfo.EventTopic, result);
+        }
+
+        [Fact]
+        public void TopicConvention_ReturnsAggregateEventTopicForInterface()
+        {
+            // Given an aggregate root
+            var sut = _fixture.GetSut();
+
+            // When I get the topic for an event interface
+            var result = sut.TopicConvention(typeof(IEvent<Test, int>));
+
+            // The result is the aggregate event topic
             var aggregateInfo = sut.GetAggregateRootInfo<Test>();
             Assert.Equal(aggregateInfo.EventTopic, result);
         }
@@ -53,10 +81,10 @@ namespace Writ.Messaging.Kafka.Events.Tests
             // Given an aggregate root
             var sut = _fixture.GetSut();
 
-            // When I get the topic for a command
+            // When I get the topic for a command failure
             var result = sut.TopicConvention(typeof(CommandFailure<Test, int>));
 
-            // The result is the aggregate command topic
+            // The result is the command failure back channel
             Assert.Equal(sut.CommandFailureTopic, result);
         }
 

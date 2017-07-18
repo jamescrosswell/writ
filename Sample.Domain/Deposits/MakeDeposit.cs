@@ -3,18 +3,19 @@ using Newtonsoft.Json;
 using Sample.Domain.Accounts;
 using Writ.Messaging.Kafka.Events;
 
-namespace Sample.Domain.Deposit
+namespace Sample.Domain.Deposits
 {
-    public class MakeDeposit : ICommand<Account, Guid>
+    public class MakeDeposit : BaseCommand<Account, Guid>
     {
-        public Guid Id { get; }
         public int Amount { get; }
 
         [JsonConstructor]
         public MakeDeposit(Guid id, int amount)
+            : base(id)
         {
-            Id = id;
             Amount = amount;
         }
+
+        public override IEvent<Account, Guid> Succeess() => new DepositMade(Id, Amount);
     }
 }

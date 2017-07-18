@@ -3,15 +3,15 @@ using Newtonsoft.Json;
 using Sample.Domain.Accounts;
 using Writ.Messaging.Kafka.Events;
 
-namespace Sample.Domain.Payment
+namespace Sample.Domain.Deposits
 {
-    public class MakePayment : ICommand<Account, Guid>
+    public class DepositMade : IEvent<Account, Guid>
     {
         public Guid Id { get; }
         public int Amount { get; }
 
         [JsonConstructor]
-        public MakePayment(Guid id, int amount)
+        public DepositMade(Guid id, int amount)
         {
             Id = id;
             Amount = amount;

@@ -2,10 +2,12 @@
 using System.Linq;
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RandomNameGeneratorLibrary;
+using Sample.Domain;
 using Sample.Domain.Accounts;
-using Sample.Domain.Deposit;
-using Sample.Domain.Payment;
+using Sample.Domain.Deposits;
+using Sample.Domain.Payments;
 using Sample.EventStore;
 using Writ.Messaging.Kafka;
 using Writ.Messaging.Kafka.Events;
@@ -13,18 +15,27 @@ using Writ.Messaging.Kafka.Serialization;
 
 namespace Sample.Client
 {
-    class Program
+    public class Program
     {
+        private static ILogger _logger;
         private static bool _cancelled = false;
         private static Random Random => new Random();
         private static PersonNameGenerator People => new PersonNameGenerator(Random);
 
-        const string ApplicationName = "Sample.Client";
-        const string BrokerList = "localhost:9092";
+        private static readonly string ApplicationName;
+        private const string BrokerList = "localhost:9092";
 
-        static void Main(string[] args)
+        static Program()
+        {
+            ApplicationName = $"Sample.Client.{Guid.NewGuid()}";
+        }
+
+        private static void Main(string[] args)
         {
             var serviceProvider = ConfigureServices();
+            _logger = serviceProvider.GetRequiredService<ILoggerFactory>()
+                .AddConsole()
+                .CreateLogger(nameof(Program));
 
             var state = serviceProvider.GetRequiredService<ApplicationState>();
 
@@ -34,6 +45,8 @@ namespace Sample.Client
                 var aggregates = serviceProvider.GetRequiredService<AggregateRootRegistry>();
                 consumer.Subscribe(aggregates.GetEventTopics(true));
 
+                _logger.LogInformation("Starting simulation...");
+
                 Console.CancelKeyPress += OnCancelKeyPress;
                 while (!_cancelled)
                 {
@@ -41,6 +54,7 @@ namespace Sample.Client
                     switch (Random.Next(1, 31))
                     {
                         case 1:
+                            _logger.LogDebug("Creating account...");
                             var createAccount = new CreateAccount(Guid.NewGuid(), People.GenerateRandomFirstAndLastName());
                             producer.ProduceAsync(createAccount).GetAwaiter().GetResult();
                             break;
@@ -52,17 +66,15 @@ namespace Sample.Client
                                 var account = state.Accounts.Find(x => true, skip).Single();
                                 if (eventId == 2)
                                 {
+                                    _logger.LogDebug("Making a deposit...");
                                     var makeDeposit = new MakeDeposit(account.Id, Random.Next(1, 100));
-                                    producer.ProduceAsync(makeDeposit)
-                                        .GetAwaiter()
-                                        .GetResult();
+                                    producer.ProduceAsync(makeDeposit).GetAwaiter().GetResult();
                                 }
                                 else
                                 {
+                                    _logger.LogDebug("Attempting payment...");
                                     var makePayment = new MakePayment(account.Id, Random.Next(1, 30));
-                                    producer.ProduceAsync(makePayment)
-                                        .GetAwaiter()
-                                        .GetResult();
+                                    producer.ProduceAsync(makePayment).GetAwaiter().GetResult();
                                 }
                             }
                             break;
@@ -86,9 +98,7 @@ namespace Sample.Client
             IServiceCollection services = new ServiceCollection();
             services.AddLogging();
 
-            var aggregates = new AggregateRootRegistry();
-            aggregates.RegisterAggregate<Account>();
-            services.AddSingleton(aggregates);
+            var aggregates = services.AddSampleAggregates();
 
             var writServices = new WritKafkaServices<string, object>(ApplicationName, new KafkaConfig
             {
@@ -102,7 +112,8 @@ namespace Sample.Client
             writServices.UseTopicConvention(aggregates.TopicConvention);
             services.AddWrit(writServices);
 
-            services.AddEventStore();
+            services.AddApplicationState();
+            services.AddEventHandlers();
 
             return services.BuildServiceProvider();
         }

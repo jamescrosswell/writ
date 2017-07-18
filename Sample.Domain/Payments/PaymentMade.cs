@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Sample.Domain.Accounts;
 using Writ.Messaging.Kafka.Events;
 
-namespace Sample.Domain.Payment
+namespace Sample.Domain.Payments
 {
     public class PaymentMade : IEvent<Account, Guid>
     {
