@@ -8,22 +8,26 @@ namespace Writ.Messaging.Kafka.Events
     /// in addition to the standard events. Normally command failures would bubble
     /// up to the application UI and/or be written as errors to application logs.
     /// </summary>
-    public interface ICommandFailure<TAggregateRoot, out TKey>
+    public interface ICommandFailure<out TCommand, TAggregateRoot, out TKey>
+        where TCommand : ICommand<TAggregateRoot, TKey>
         where TAggregateRoot : IAggregateRoot<TKey>
     {
-        ICommand<TAggregateRoot, TKey> Command { get; }
+        TCommand Command { get; }
         string Reason { get; }
     }
 
-    public class CommandFailure<TAggregateRoot, TKey> : ICommandFailure<TAggregateRoot, TKey>
+    // TODO: Add unit tests to serialize/deserialize command failures
+    public class CommandFailure<TCommand, TAggregateRoot, TKey> : ICommandFailure<TCommand, TAggregateRoot, TKey>
+        where TCommand : ICommand<TAggregateRoot, TKey>
         where TAggregateRoot : IAggregateRoot<TKey>
     {
-        public ICommand<TAggregateRoot, TKey> Command { get; }
+        public TCommand Command { get; }
         public string Reason { get; }
 
-        public CommandFailure(ICommand<TAggregateRoot, TKey> command, string reason)
+        public CommandFailure(TCommand command, string reason)
         {
-            Command = command ?? throw new ArgumentNullException(nameof(command));
+            if (command == null) throw new ArgumentNullException(nameof(command));
+            Command = command;
             Reason = reason ?? throw new ArgumentNullException(nameof(reason));
         }
     }

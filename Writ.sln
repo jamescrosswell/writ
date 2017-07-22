@@ -27,13 +27,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Writ.Messaging.Kafka.Events
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{81DE0E52-AFC5-45F3-86FA-3AEC5A52E859}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.CommandProcessor", "Sample.CommandProcessor\Sample.CommandProcessor.csproj", "{9DDD32FE-385E-4CE4-A60C-235E1468314A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.CommandProcessor", "Sample.CommandProcessor\Sample.CommandProcessor.csproj", "{9DDD32FE-385E-4CE4-A60C-235E1468314A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.Client", "Sample.Client\Sample.Client.csproj", "{7CEA2984-69AE-445D-9A73-D3FD3D9428F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Client", "Sample.Client\Sample.Client.csproj", "{7CEA2984-69AE-445D-9A73-D3FD3D9428F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.Domain", "Sample.Domain\Sample.Domain.csproj", "{4E6C53B1-F59A-4D02-9F08-FC0164268444}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Domain", "Sample.Domain\Sample.Domain.csproj", "{4E6C53B1-F59A-4D02-9F08-FC0164268444}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.EventStore", "Sample.EventStore\Sample.EventStore.csproj", "{4AFC95C4-FDED-40CC-83B7-2C7B9F632580}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.EventStore", "Sample.EventStore\Sample.EventStore.csproj", "{4AFC95C4-FDED-40CC-83B7-2C7B9F632580}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Writ.Messaging.Kafka.Json", "Writ.Messaging.Kafka.Json\Writ.Messaging.Kafka.Json.csproj", "{BCAC63DD-45B0-41E4-84C3-E6A87128A1F1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Writ.Messaging.Kafka.Json.Tests", "Writ.Messaging.Kafka.Json.Tests\Writ.Messaging.Kafka.Json.Tests.csproj", "{EAF368F7-43F2-418E-AF03-1CD75171DE46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +85,14 @@ Global
 		{4AFC95C4-FDED-40CC-83B7-2C7B9F632580}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4AFC95C4-FDED-40CC-83B7-2C7B9F632580}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4AFC95C4-FDED-40CC-83B7-2C7B9F632580}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCAC63DD-45B0-41E4-84C3-E6A87128A1F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCAC63DD-45B0-41E4-84C3-E6A87128A1F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCAC63DD-45B0-41E4-84C3-E6A87128A1F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCAC63DD-45B0-41E4-84C3-E6A87128A1F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAF368F7-43F2-418E-AF03-1CD75171DE46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAF368F7-43F2-418E-AF03-1CD75171DE46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAF368F7-43F2-418E-AF03-1CD75171DE46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAF368F7-43F2-418E-AF03-1CD75171DE46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -96,5 +108,7 @@ Global
 		{7CEA2984-69AE-445D-9A73-D3FD3D9428F1} = {81DE0E52-AFC5-45F3-86FA-3AEC5A52E859}
 		{4E6C53B1-F59A-4D02-9F08-FC0164268444} = {81DE0E52-AFC5-45F3-86FA-3AEC5A52E859}
 		{4AFC95C4-FDED-40CC-83B7-2C7B9F632580} = {81DE0E52-AFC5-45F3-86FA-3AEC5A52E859}
+		{BCAC63DD-45B0-41E4-84C3-E6A87128A1F1} = {38C8546A-A6F9-4A17-9619-8E6FA8E181D2}
+		{EAF368F7-43F2-418E-AF03-1CD75171DE46} = {4BABD1BF-A879-4CCE-B9E2-328179D6F85C}
 	EndGlobalSection
 EndGlobal

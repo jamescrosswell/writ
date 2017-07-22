@@ -24,14 +24,19 @@ namespace Writ.Messaging.Kafka.Tests
                 IServiceCollection services = new ServiceCollection();
                 services.AddLogging();
 
+                var typeMap = new SchemaTypeMap();
+                typeMap.RegisterTypeSchema<Test>("Test");
+                typeMap.RegisterTypeSchema<MessageEnvelope<Test>>("TestEnvelope");
+                services.AddSingleton<ISchemaTypeMap>(typeMap);
+
                 var writServices = new WritKafkaServices<string, object>(ApplicationName, new KafkaConfig
                 {
                     BrokerList = BrokerList,
                     AutoOffset = "smallest",
                     GroupId = ApplicationName
                 });
-                writServices.UseKeySerialization(new StringSerialization());
-                writServices.UseObjectSerialization(new JsonSerialization());
+                writServices.UseKeySerialization<string, object, StringSerialization>();
+                writServices.UseObjectSerialization<string, object, JsonSerialization>();
                 writServices.UseTopicConvention(TestTopicConvention);
                 services.AddWrit(writServices);
 

@@ -35,33 +35,31 @@ namespace Writ.Messaging.Kafka
         }
 
         public static WritKafkaServices<TKey, TEntityBase> UseKeySerializers<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices,
-            ISerializer<TKey> serializer, IDeserializer<TKey> deserializer)
+            Type serializerType, Type deserializerType)
         {
-            writServices.KeySerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-            writServices.KeyDeserializer = deserializer ?? throw new ArgumentNullException(nameof(deserializer));
+            writServices.KeySerializerType = serializerType ?? throw new ArgumentNullException(nameof(serializerType));
+            writServices.KeyDeserializerType = deserializerType ?? throw new ArgumentNullException(nameof(deserializerType));
             return writServices;
         }
 
-        public static WritKafkaServices<TKey, TEntityBase> UseKeySerialization<TKey, TEntityBase, TSerializer>(this WritKafkaServices<TKey, TEntityBase> writServices,
-            TSerializer serializationHelper)
+        public static WritKafkaServices<TKey, TEntityBase> UseKeySerialization<TKey, TEntityBase, TSerializer>(this WritKafkaServices<TKey, TEntityBase> writServices)
             where TSerializer : ISerializer<TKey>, IDeserializer<TKey>
         {
-            return writServices.UseKeySerializers(serializationHelper, serializationHelper);
+            return writServices.UseKeySerializers(typeof(TSerializer), typeof(TSerializer));
         }
 
         public static WritKafkaServices<TKey, TEntityBase> UseObjectSerializers<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices,
-            ISerializer<TEntityBase> serializer, IDeserializer<TEntityBase> deserializer)
+            Type serializerType, Type deserializerType)
         {
-            writServices.ObjectSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-            writServices.ObjectDeserializer = deserializer ?? throw new ArgumentNullException(nameof(deserializer));
+            writServices.ObjectSerializerType = serializerType ?? throw new ArgumentNullException(nameof(serializerType));
+            writServices.ObjectDeserializerType = deserializerType ?? throw new ArgumentNullException(nameof(deserializerType));
             return writServices;
         }
 
-        public static WritKafkaServices<TKey, TEntityBase> UseObjectSerialization<TKey, TEntityBase, TSerializer>(this WritKafkaServices<TKey, TEntityBase> writServices,
-            TSerializer serializationHelper)
+        public static WritKafkaServices<TKey, TEntityBase> UseObjectSerialization<TKey, TEntityBase, TSerializer>(this WritKafkaServices<TKey, TEntityBase> writServices)
             where TSerializer: ISerializer<TEntityBase>, IDeserializer<TEntityBase>
         {
-            return writServices.UseObjectSerializers(serializationHelper, serializationHelper);
+            return writServices.UseObjectSerializers(typeof(TSerializer), typeof(TSerializer));
         }
 
         public static WritKafkaServices<TKey, TEntityBase> UseTopicConvention<TKey, TEntityBase>(this WritKafkaServices<TKey, TEntityBase> writServices,
@@ -85,10 +83,10 @@ namespace Writ.Messaging.Kafka
         public CorrelationProvider CorrelationProvider { get; set; }
         public bool UseEnvelopes { get; set; }
         public KafkaConfig KafkaConfig { get; }
-        public ISerializer<TKey> KeySerializer { get; set; }
-        public IDeserializer<TKey> KeyDeserializer { get; set; }
-        public ISerializer<TEntityBase> ObjectSerializer { get; set; }
-        public IDeserializer<TEntityBase> ObjectDeserializer { get; set; }
+        public Type KeySerializerType { get; set; }
+        public Type KeyDeserializerType { get; set; }
+        public Type ObjectSerializerType { get; set; }
+        public Type ObjectDeserializerType { get; set; }
         public EntityTopicConvention TopicConvention { get; set; }
         public EntityKeyConvention<TEntityBase, TKey> KeyConvention { get; set; }
 
@@ -111,14 +109,16 @@ namespace Writ.Messaging.Kafka
             services.AddSingleton(p => KafkaConfig);
             services.AddScoped(p => CorrelationProvider);
             services.AddTransient<IEnvelopeHandler, EnvelopeHandler>();
-            if (KeySerializer != null)
-                services.AddSingleton(KeySerializer);
-            if (KeyDeserializer != null)
-                services.AddSingleton(KeyDeserializer);
-            if (ObjectSerializer != null)
-                services.AddSingleton(ObjectSerializer);
-            if (ObjectDeserializer != null)
-                services.AddSingleton(ObjectDeserializer);
+
+            if (KeySerializerType != null)
+                services.AddSingleton(typeof(ISerializer<TKey>), KeySerializerType);
+            if (KeyDeserializerType != null)
+                services.AddSingleton(typeof(IDeserializer<TKey>), KeyDeserializerType);
+
+            if (ObjectSerializerType != null)
+                services.AddSingleton(typeof(ISerializer<TEntityBase>), ObjectSerializerType);
+            if (ObjectDeserializerType != null)
+                services.AddSingleton(typeof(IDeserializer<TEntityBase>), ObjectDeserializerType);
 
             if (TopicConvention != null)
                 services.AddSingleton(TopicConvention);

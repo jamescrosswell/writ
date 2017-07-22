@@ -2,6 +2,8 @@
 using Sample.Domain.Deposits;
 using System;
 using Microsoft.Extensions.Logging;
+using Sample.Domain;
+using Sample.Domain.Accounts;
 using Writ.Messaging.Kafka;
 
 namespace Sample.EventStore.Deposits
@@ -34,7 +36,7 @@ namespace Sample.EventStore.Deposits
             var account = _applicationState.Accounts.FindById(value.Id);
             if (account == null)
             {
-                _producer.ProduceAsync(value.Failure($"Invalid account {value.Id}"));
+                _producer.ProduceAsync(value.Failure<MakeDeposit, Account, Guid>($"Invalid account {value.Id}"));
                 return;
             }
 

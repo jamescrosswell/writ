@@ -69,8 +69,8 @@ namespace Sample.CommandProcessor
                 AutoOffset = "smallest",
                 GroupId = ApplicationName
             });
-            writServices.UseKeySerialization(new StringSerialization());
-            writServices.UseObjectSerialization(new JsonSerialization());
+            writServices.UseKeySerialization<string, object, StringSerialization>();
+            writServices.UseObjectSerialization<string, object, JsonSerialization>();
             writServices.UseKeyConvention(MessageConventions.StringKeyConvention<object>());
             writServices.UseTopicConvention(aggregates.TopicConvention);
             services.AddWrit(writServices);
@@ -78,6 +78,8 @@ namespace Sample.CommandProcessor
             services.AddApplicationState();
             services.AddCommandHandlers();
             services.AddEventHandlers();
+
+            services.AddSampleSchemaConventions();
 
             return services.BuildServiceProvider();
         }

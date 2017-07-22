@@ -1,6 +1,8 @@
 ﻿using System;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Sample.Domain;
+using Sample.Domain.Accounts;
 using Sample.Domain.Payments;
 using Writ.Messaging.Kafka;
 
@@ -33,9 +35,9 @@ namespace Sample.EventStore.Payments
             // Check to make sure the account is valid
             var account = _applicationState.Accounts.FindById(value.Id);
             if (account == null)
-                _producer.ProduceAsync(value.Failure($"Invalid account {value.Id}"));
+                _producer.ProduceAsync(value.Failure<MakePayment, Account, Guid>($"Invalid account {value.Id}"));
             else if (account.Balance - value.Amount < 0)
-                _producer.ProduceAsync(value.Failure($"Insufficient funds"));
+                _producer.ProduceAsync(value.Failure<MakePayment, Account, Guid>($"Insufficient funds"));
             else
             {
                 var fact = value.Succeess();

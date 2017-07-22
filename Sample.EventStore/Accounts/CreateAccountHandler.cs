@@ -2,6 +2,7 @@
 using Sample.Domain.Accounts;
 using System;
 using Microsoft.Extensions.Logging;
+using Sample.Domain;
 using Writ.Messaging.Kafka;
 
 namespace Sample.EventStore.Accounts
@@ -33,7 +34,7 @@ namespace Sample.EventStore.Accounts
             // Check to make sure the account doesn't already exist
             if (_applicationState.Accounts.Exists(x => x.Id == value.Id))
             {
-                _producer.ProduceAsync(value.Failure($"Account {value.Id} already exist"));
+                _producer.ProduceAsync(value.Failure<CreateAccount, Account, Guid>($"Account {value.Id} already exist"));
                 return;
             }
 

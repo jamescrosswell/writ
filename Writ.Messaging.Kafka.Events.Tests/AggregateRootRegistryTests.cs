@@ -82,7 +82,7 @@ namespace Writ.Messaging.Kafka.Events.Tests
             var sut = _fixture.GetSut();
 
             // When I get the topic for a command failure
-            var result = sut.TopicConvention(typeof(CommandFailure<Test, int>));
+            var result = sut.TopicConvention(typeof(CommandFailure<CreateTest, Test, int>));
 
             // The result is the command failure back channel
             Assert.Equal(sut.CommandFailureTopic, result);

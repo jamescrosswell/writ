@@ -12,11 +12,16 @@ namespace Sample.Domain
             Id = id;
         }
 
-        public CommandFailure<TAggregateRoot, TKey> Failure(string reason)
-        {
-            return new CommandFailure<TAggregateRoot, TKey>(this, reason);
-        }
-
         public abstract IEvent<TAggregateRoot, TKey> Succeess();
+    }
+
+    public static class BaseCommandExtensions
+    {
+        public static CommandFailure<TCommand, TAggregateRoot, TKey> Failure<TCommand, TAggregateRoot, TKey>(this TCommand command, string reason)
+            where TCommand: BaseCommand<TAggregateRoot, TKey>
+            where TAggregateRoot : IAggregateRoot<TKey>
+        {
+            return new CommandFailure<TCommand, TAggregateRoot, TKey>(command, reason);
+        }
     }
 }

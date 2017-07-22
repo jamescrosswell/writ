@@ -40,7 +40,7 @@ namespace Writ.Messaging.Kafka.Events
 
         private string GetCommandFailureTopic(Type type)
         {
-            var failureType = GetGenericInterfaceTypeDefinition(type, typeof(ICommandFailure<,>));
+            var failureType = GetGenericInterfaceTypeDefinition(type, typeof(ICommandFailure<,,>));
             return (failureType != null)
                 ? CommandFailureTopic
                 : null;

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Writ.Messaging.Kafka.Serialization;
+using System.Runtime.Serialization;
 using Xunit;
 
-namespace Writ.Messaging.Tests
+namespace Writ.Messaging.Kafka.Avro.Tests
 {
-    public class JsonSerializationTests
+    public class AvroSerializationTests
     {
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+        [DataContract]
         private sealed class Foo
         {
             private bool Equals(Foo other)
@@ -35,30 +36,51 @@ namespace Writ.Messaging.Tests
 
             [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Local")]
             [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+            [DataMember]
             public Guid Bar { get; set; }
         }
+
+        private sealed class Fixture
+        {
+            public AvroSerialization GetSut()
+            {
+                var schemaTypeMap = new SchemaTypeMap();
+                schemaTypeMap.RegisterTypeSchema<Foo>("AvroSerializationTests.Foo");
+                schemaTypeMap.RegisterTypeSchema<Animal>("AvroSerializationTests.Animal");
+                schemaTypeMap.RegisterTypeSchema<Color>("AvroSerializationTests.Color");
+                schemaTypeMap.RegisterTypeSchema<Animal<Color>>("AvroSerializationTests.ColoredAnimal");
+                schemaTypeMap.RegisterTypeSchema<MessageEnvelope<Foo>>("AvroSerializationTests.EnvelopedFoo");
+                return new AvroSerialization(schemaTypeMap);
+            }
+        }
+
+        private readonly Fixture _fixture = new Fixture();
 
         [Fact]
         public void Deserialized_EqualsPreSerialized()
         {
             var input = new Foo();
 
-            var sut = new JsonSerialization();
+            var sut = _fixture.GetSut();
             var bytes = sut.Serialize(input);
             var output = sut.Deserialize(bytes);
 
             Assert.Equal(input, output);
         }
 
+        [DataContract]
         class Color
         {
+            [DataMember]
             public string Name { get; set; }
         }
 
+        [DataContract]
         class Animal
         {
-            public string Type { get; set; }
-
+            [DataMember]
+            public string Kind { get; set; }
+            [DataMember]
             public Color Color { get; set; }
         }
 
@@ -68,26 +90,28 @@ namespace Writ.Messaging.Tests
 
             var input = new Animal
             {
-                Type = "Horse",
+                Kind = "Horse",
                 Color = new Color
                 {
                     Name = "White"
                 }
             };
 
-            var sut = new JsonSerialization();
+            var sut = _fixture.GetSut();
             var bytes = sut.Serialize(input);
             var output = (Animal)sut.Deserialize(bytes);
 
-            Assert.Equal(input.Type, output.Type);
+            Assert.Equal(input.Kind, output.Kind);
             Assert.NotNull(output.Color);
             Assert.Equal(input.Color.Name, output.Color.Name);
         }
 
+        [DataContract]
         class Animal<T>
         {
+            [DataMember]
             public string Type { get; set; }
-
+            [DataMember]
             public T Attribute { get; set; }
         }
 
@@ -104,7 +128,7 @@ namespace Writ.Messaging.Tests
                 }
             };
 
-            var sut = new JsonSerialization();
+            var sut = _fixture.GetSut();
             var bytes = sut.Serialize(input);
             var output = (Animal<Color>)sut.Deserialize(bytes);
 
@@ -121,7 +145,7 @@ namespace Writ.Messaging.Tests
             var input = new Foo();
             var envelopedInput = (MessageEnvelope<Foo>)handler.Stuff(input);
 
-            var sut = new JsonSerialization();
+            var sut = _fixture.GetSut();
             var bytes = sut.Serialize(envelopedInput);
             var envelopedOutput = (MessageEnvelope<Foo>)sut.Deserialize(bytes);
 
