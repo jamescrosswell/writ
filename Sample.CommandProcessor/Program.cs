@@ -20,7 +20,7 @@ namespace Sample.CommandProcessor
 
         static Program()
         {
-            ApplicationName = $"{Guid.NewGuid()}";
+            ApplicationName = $"Sample.CommandProcessor.{Guid.NewGuid()}";
         }
 
         private static void Main(string[] args)

@@ -1,10 +1,9 @@
-using System;
 using Newtonsoft.Json;
-using Writ.Messaging.Kafka.Events;
+using System;
 
 namespace Sample.Domain.Accounts
 {
-    public class CreateAccount : BaseCommand<Account, Guid>
+    public class CreateAccount : BaseCommand<Account, Guid, AccountCreated>
     {
         public string AccountHolder { get; }
 
@@ -15,6 +14,6 @@ namespace Sample.Domain.Accounts
             AccountHolder = accountHolder ?? throw new ArgumentNullException(nameof(accountHolder));
         }
 
-        public override IEvent<Account, Guid> Succeess() => new AccountCreated(Id, AccountHolder);
+        public override AccountCreated Succeess() => new AccountCreated(Id, AccountHolder);
     }
 }

@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Writ.Messaging.Kafka.Events\Writ.Messaging.Kafka.Events.csproj" />
     <ProjectReference Include="..\Writ.Messaging.Kafka.Json\Writ.Messaging.Kafka.Json.csproj" />
     <ProjectReference Include="..\Writ.Messaging.Kafka\Writ.Messaging.Kafka.csproj" />
     <ProjectReference Include="..\Writ.Messaging\Writ.Messaging.csproj" />

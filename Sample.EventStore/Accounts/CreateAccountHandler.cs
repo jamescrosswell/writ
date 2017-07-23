@@ -34,13 +34,13 @@ namespace Sample.EventStore.Accounts
             // Check to make sure the account doesn't already exist
             if (_applicationState.Accounts.Exists(x => x.Id == value.Id))
             {
-                _producer.ProduceAsync(value.Failure<CreateAccount, Account, Guid>($"Account {value.Id} already exist"));
+                _producer.ProduceAsync(value.Failure<CreateAccount, Account, Guid, AccountCreated>($"Account {value.Id} already exist"));
                 return;
             }
 
             var fact = value.Succeess();
             _producer.ProduceAsync(fact);
-            _factHandler.Handle(message, (AccountCreated)fact); // Applies the fact to the application state used to ensure command consistency
+            _factHandler.Handle(message, fact); // Applies the fact to the application state used to ensure command consistency
         }
     }
 }

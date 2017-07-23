@@ -63,7 +63,8 @@ namespace Sample.Client
                             if (count > 0)
                             {
                                 var skip = Random.Next(0, count);
-                                var account = state.Accounts.Find(x => true, skip).Single();
+                                const int take = 1;
+                                var account = state.Accounts.Find(x => true, skip, take).Single();
                                 if (eventId == 2)
                                 {
                                     _logger.LogDebug("Making a deposit...");

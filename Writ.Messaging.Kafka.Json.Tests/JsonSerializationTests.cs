@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using Writ.Messaging.Kafka.Events;
 using Writ.Messaging.Kafka.Serialization;
 using Xunit;
 
@@ -48,6 +49,7 @@ namespace Writ.Messaging.Kafka.Tests
                 schemaTypeMap.RegisterTypeSchema<Color>("AvroSerializationTests.Color");
                 schemaTypeMap.RegisterTypeSchema<Animal<Color>>("AvroSerializationTests.ColoredAnimal");
                 schemaTypeMap.RegisterTypeSchema<MessageEnvelope<Foo>>("AvroSerializationTests.EnvelopedFoo");
+                schemaTypeMap.RegisterTypeSchema<CommandFailure<CreateAnimal, Animal, int>>("CreateAnimaFailure");
                 return new JsonSerialization(schemaTypeMap);
             }
         }
@@ -71,10 +73,10 @@ namespace Writ.Messaging.Kafka.Tests
             public string Name { get; set; }
         }
 
-        class Animal
+        class Animal : IAggregateRoot<int>
         {
+            public int Id { get; set; }
             public string Type { get; set; }
-
             public Color Color { get; set; }
         }
 
@@ -83,6 +85,7 @@ namespace Writ.Messaging.Kafka.Tests
         {
             var input = new Animal
             {
+                Id = 1,
                 Type = "Horse",
                 Color = new Color
                 {
@@ -94,6 +97,7 @@ namespace Writ.Messaging.Kafka.Tests
             var bytes = sut.Serialize(input);
             var output = (Animal)sut.Deserialize(bytes);
 
+            Assert.Equal(input.Id, output.Id);
             Assert.Equal(input.Type, output.Type);
             Assert.NotNull(output.Color);
             Assert.Equal(input.Color.Name, output.Color.Name);
@@ -102,7 +106,6 @@ namespace Writ.Messaging.Kafka.Tests
         class Animal<T>
         {
             public string Type { get; set; }
-
             public T Attribute { get; set; }
         }
 
@@ -142,6 +145,26 @@ namespace Writ.Messaging.Kafka.Tests
 
             var output = handler.Open(envelopedOutput);
             Assert.Equal(input, output);
+        }
+
+        class CreateAnimal : ICommand<Animal, int>
+        {
+            public int Id { get; set; }
+        }
+
+        [Fact]
+        public void Deserialize_deserializes_command_failures()
+        {
+            var command = new CreateAnimal{Id = 123};
+            var input = new CommandFailure<CreateAnimal, Animal, int>(command, "testing 123");
+
+            var sut = _fixture.GetSut();
+            var bytes = sut.Serialize(input);
+            var output = sut.Deserialize(bytes) as CommandFailure<CreateAnimal, Animal, int>;
+
+            Assert.NotNull(output?.Command);
+            Assert.Equal(input.Reason, output.Reason);
+            Assert.Equal(input.Command.Id, output.Command.Id);
         }
     }
 }

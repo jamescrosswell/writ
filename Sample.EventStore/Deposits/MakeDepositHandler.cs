@@ -36,13 +36,13 @@ namespace Sample.EventStore.Deposits
             var account = _applicationState.Accounts.FindById(value.Id);
             if (account == null)
             {
-                _producer.ProduceAsync(value.Failure<MakeDeposit, Account, Guid>($"Invalid account {value.Id}"));
+                _producer.ProduceAsync(value.Failure<MakeDeposit, Account, Guid, DepositMade>($"Invalid account {value.Id}"));
                 return;
             }
 
             var fact = value.Succeess();
             _producer.ProduceAsync(fact);
-            _factHandler.Handle(message, (DepositMade)fact); // Applies the fact to the application state used to ensure command consistency
+            _factHandler.Handle(message, fact); // Applies the fact to the application state used to ensure command consistency
         }
     }
 }

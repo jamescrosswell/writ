@@ -38,10 +38,12 @@ namespace Sample.Domain
                 typeMap.RegisterTypeSchema<MessageEnvelope<TMessage>>($"{typeName}Envelope");
             }
 
-            void AddCommandSchema<TMessage>()
+            void AddCommandSchema<TMessage>() where TMessage : ICommand<Account, Guid>
             {
+                var typeName = typeof(TMessage).Name;
                 AddMessageSchema<TMessage>();
-                typeMap.RegisterTypeSchema<CommandFailure<CreateAccount, Account, Guid>>($"{typeof(TMessage).Name}CommandFailure");
+                typeMap.RegisterTypeSchema<CommandFailure<TMessage, Account, Guid>>($"{typeName}CommandFailure");
+                typeMap.RegisterTypeSchema<MessageEnvelope<CommandFailure<TMessage, Account, Guid>>>($"{typeName}CommandFailureEnvelope");
             }
 
             AddCommandSchema<CreateAccount>();

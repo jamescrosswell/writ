@@ -35,14 +35,14 @@ namespace Sample.EventStore.Payments
             // Check to make sure the account is valid
             var account = _applicationState.Accounts.FindById(value.Id);
             if (account == null)
-                _producer.ProduceAsync(value.Failure<MakePayment, Account, Guid>($"Invalid account {value.Id}"));
+                _producer.ProduceAsync(value.Failure<MakePayment, Account, Guid, PaymentMade>($"Invalid account {value.Id}"));
             else if (account.Balance - value.Amount < 0)
-                _producer.ProduceAsync(value.Failure<MakePayment, Account, Guid>($"Insufficient funds"));
+                _producer.ProduceAsync(value.Failure<MakePayment, Account, Guid, PaymentMade>($"Insufficient funds"));
             else
             {
                 var fact = value.Succeess();
                 _producer.ProduceAsync(fact);
-                _factHandler.Handle(message, (PaymentMade)fact); // Applies the fact to the application state used to ensure command consistency
+                _factHandler.Handle(message, fact); // Applies the fact to the application state used to ensure command consistency
             }
         }
     }

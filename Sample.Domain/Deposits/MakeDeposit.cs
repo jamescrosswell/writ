@@ -1,11 +1,10 @@
-using System;
 using Newtonsoft.Json;
 using Sample.Domain.Accounts;
-using Writ.Messaging.Kafka.Events;
+using System;
 
 namespace Sample.Domain.Deposits
 {
-    public class MakeDeposit : BaseCommand<Account, Guid>
+    public class MakeDeposit : BaseCommand<Account, Guid, DepositMade>
     {
         public int Amount { get; }
 
@@ -16,6 +15,6 @@ namespace Sample.Domain.Deposits
             Amount = amount;
         }
 
-        public override IEvent<Account, Guid> Succeess() => new DepositMade(Id, Amount);
+        public override DepositMade Succeess() => new DepositMade(Id, Amount);
     }
 }
