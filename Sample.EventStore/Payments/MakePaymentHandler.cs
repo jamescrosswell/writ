@@ -1,49 +1,42 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Sample.Domain;
 using Sample.Domain.Accounts;
 using Sample.Domain.Payments;
 using Writ.Messaging.Kafka;
+using Writ.Messaging.Kafka.Events;
 
 namespace Sample.EventStore.Payments
 {
-    public class MakePaymentHandler : ObjectMessageHandler<string, MakePayment>
+    public class MakePaymentHandler : SampleCommandHandler<Account, Guid, MakePayment, PaymentMade>
     {
-        private readonly ILogger<MakePaymentHandler> _logger;
-        private readonly IObjectMessageHandler<string, PaymentMade> _factHandler;
-        private readonly ConventionalObjectMessageProducer<string, object> _producer;
-        private readonly ApplicationState _applicationState;
-
         public MakePaymentHandler(
             ApplicationState applicationState, 
             ConventionalObjectMessageProducer<string, object> producer,
             IObjectMessageHandler<string, PaymentMade> factHandler,
             ILogger<MakePaymentHandler> logger
             )
+            : base(applicationState, producer, factHandler, logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _factHandler = factHandler ?? throw new ArgumentNullException(nameof(factHandler));
-            _producer = producer ?? throw new ArgumentNullException(nameof(producer));
-            _applicationState = applicationState ?? throw new ArgumentNullException(nameof(applicationState));
         }
 
-        public override void Handle(Message<string, object> message, MakePayment value)
+        protected override IEnumerable<CommandFailure<MakePayment, Account, Guid>> ValidateCommand(Message<string, object> message, MakePayment value)
         {
-            _logger.LogInformation($"Processing payment {value.Id}");
-
             // Check to make sure the account is valid
-            var account = _applicationState.Accounts.FindById(value.Id);
+            var account = State.Accounts.FindById(value.Id);
             if (account == null)
-                _producer.ProduceAsync(value.Failure<MakePayment, Account, Guid, PaymentMade>($"Invalid account {value.Id}"));
+                yield return value.Failure<MakePayment, Account, Guid>($"Invalid account {value.Id}");
             else if (account.Balance - value.Amount < 0)
-                _producer.ProduceAsync(value.Failure<MakePayment, Account, Guid, PaymentMade>($"Insufficient funds"));
-            else
-            {
-                var fact = value.Succeess();
-                _producer.ProduceAsync(fact);
-                _factHandler.Handle(message, fact); // Applies the fact to the application state used to ensure command consistency
-            }
+                yield return value.Failure<MakePayment, Account, Guid>($"Insufficient funds");
+        }
+
+        protected override PaymentMade ProcessCommand(Message<string, object> message, MakePayment value)
+        {
+            Logger.LogInformation($"Processing payment {value.Id}");
+            return new PaymentMade(message.TopicPartitionOffset, value.Id, value.Amount);
         }
     }
 }

@@ -1,19 +1,17 @@
-using System;
 using Newtonsoft.Json;
-using Sample.Domain.Accounts;
+using System;
 using Writ.Messaging.Kafka.Events;
 
 namespace Sample.Domain.Payments
 {
-    public class PaymentMade : IEvent<Account, Guid>
+    public class PaymentMade : BaseAccountEvent
     {
-        public Guid Id { get; }
         public int Amount { get; }
 
         [JsonConstructor]
-        public PaymentMade(Guid id, int amount)
+        public PaymentMade(MessageOffset commandOffset, Guid id, int amount)
+            : base(commandOffset, id)
         {
-            Id = id;
             Amount = amount;
         }
     }

@@ -3,7 +3,7 @@ using System;
 
 namespace Sample.Domain.Accounts
 {
-    public class CreateAccount : BaseCommand<Account, Guid, AccountCreated>
+    public class CreateAccount : BaseCommand<Account, Guid>
     {
         public string AccountHolder { get; }
 
@@ -13,7 +13,5 @@ namespace Sample.Domain.Accounts
         {
             AccountHolder = accountHolder ?? throw new ArgumentNullException(nameof(accountHolder));
         }
-
-        public override AccountCreated Succeess() => new AccountCreated(Id, AccountHolder);
     }
 }

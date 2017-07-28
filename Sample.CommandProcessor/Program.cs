@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Sample.Domain;
 using Sample.EventStore;
 using System;
+using System.Linq;
 using Writ.Messaging.Kafka;
 using Writ.Messaging.Kafka.Events;
 using Writ.Messaging.Kafka.Serialization;
@@ -15,7 +16,7 @@ namespace Sample.CommandProcessor
         private static ILogger _logger;
         private static bool _cancelled = false;
 
-        private static string ApplicationName = "Sample.CommandProcessor";
+        private static readonly string ApplicationName;
         private const string BrokerList = "localhost:9092";
 
         static Program()
@@ -32,7 +33,10 @@ namespace Sample.CommandProcessor
 
             var state = serviceProvider.GetRequiredService<ApplicationState>();
 
-            using (var producer = serviceProvider.GetRequiredService<ConventionalObjectMessageProducer<string, object>>())
+            Console.CancelKeyPress += OnCancelKeyPress;
+
+            LoadApplicationState(serviceProvider);
+
             using (var consumer = serviceProvider.GetRequiredService<Consumer<string, object>>())
             {
                 var aggregates = serviceProvider.GetRequiredService<AggregateRootRegistry>();
@@ -40,7 +44,6 @@ namespace Sample.CommandProcessor
 
                 _logger.LogInformation("Listening for commands...");
 
-                Console.CancelKeyPress += OnCancelKeyPress;
                 while (!_cancelled)
                 {
                     consumer.Poll(TimeSpan.FromMilliseconds(100));
@@ -50,6 +53,45 @@ namespace Sample.CommandProcessor
 
         }
 
+        /// <summary>
+        /// Rebuilds the application state by applying historic events
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        private static void LoadApplicationState(IServiceProvider serviceProvider)
+        {
+            using (var consumer = serviceProvider.GetRequiredService<Consumer<string, object>>())
+            {
+                var aggregates = serviceProvider.GetRequiredService<AggregateRootRegistry>();
+                consumer.Subscribe(aggregates.GetEventTopics(false));
+
+                var metaData = consumer.GetMetadata(true);
+                var topicPartitions =
+                    metaData
+                        .Topics
+                        .Where(t => aggregates.GetEventTopics(false).Contains(t.Topic))
+                        .SelectMany(t => t.Partitions.Select(p => new TopicPartition(t.Topic, p.PartitionId)))
+                        .ToList();
+                var watermarks = topicPartitions
+                    .Select(p => new { TopicPartition = p, WatermarkOffsets = consumer.QueryWatermarkOffsets(p)})
+                    .ToDictionary(
+                        p => p.TopicPartition,
+                        p => p.WatermarkOffsets
+                    );
+
+                _logger.LogInformation("Loading application state...");
+
+                while (!_cancelled)
+                {
+                    consumer.Poll(TimeSpan.FromMilliseconds(100));
+
+                    var partitionOffsets = consumer.Position(topicPartitions);
+                    if (partitionOffsets.All(p => p.Offset == watermarks[p.TopicPartition].High))
+                        break;
+                }
+
+                _logger.LogInformation("Application state loaded successfully!");
+            }
+        }
         private static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
             e.Cancel = true;

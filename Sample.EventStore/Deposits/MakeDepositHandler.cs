@@ -1,48 +1,41 @@
 ﻿using Confluent.Kafka;
 using Sample.Domain.Deposits;
 using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Sample.Domain;
 using Sample.Domain.Accounts;
 using Writ.Messaging.Kafka;
+using Writ.Messaging.Kafka.Events;
 
 namespace Sample.EventStore.Deposits
 {
-    public class MakeDepositHandler : ObjectMessageHandler<string, MakeDeposit>
+    public class MakeDepositHandler : SampleCommandHandler<Account, Guid, MakeDeposit, DepositMade>
     {
-        private readonly ILogger<MakeDepositHandler> _logger;
-        private readonly IObjectMessageHandler<string, DepositMade> _factHandler;
-        private readonly ConventionalObjectMessageProducer<string, object> _producer;
-        private readonly ApplicationState _applicationState;
-
         public MakeDepositHandler(
             ApplicationState applicationState, 
             ConventionalObjectMessageProducer<string, object> producer,
             IObjectMessageHandler<string, DepositMade> factHandler,
             ILogger<MakeDepositHandler> logger
             )
+            : base(applicationState, producer, factHandler, logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _factHandler = factHandler ?? throw new ArgumentNullException(nameof(factHandler));
-            _producer = producer ?? throw new ArgumentNullException(nameof(producer));
-            _applicationState = applicationState ?? throw new ArgumentNullException(nameof(applicationState));
         }
 
-        public override void Handle(Message<string, object> message, MakeDeposit value)
+        protected override IEnumerable<CommandFailure<MakeDeposit, Account, Guid>> ValidateCommand(Message<string, object> message, MakeDeposit value)
         {
-            _logger.LogInformation($"Processing deposit {value.Id}");
-
-            // Check to make sure the account doesn't already exist
-            var account = _applicationState.Accounts.FindById(value.Id);
+            // Check to make sure the account exists
+            var account = State.Accounts.FindById(value.Id);
             if (account == null)
-            {
-                _producer.ProduceAsync(value.Failure<MakeDeposit, Account, Guid, DepositMade>($"Invalid account {value.Id}"));
-                return;
-            }
-
-            var fact = value.Succeess();
-            _producer.ProduceAsync(fact);
-            _factHandler.Handle(message, fact); // Applies the fact to the application state used to ensure command consistency
+                yield return value.Failure<MakeDeposit, Account, Guid>($"Invalid account {value.Id}");
+            if (value.Amount <= 0)
+                yield return value.Failure<MakeDeposit, Account, Guid>($"Invalid deposit amount {value.Amount}");
         }
+
+        protected override DepositMade ProcessCommand(Message<string, object> message, MakeDeposit value)
+        {
+            Logger.LogInformation($"Processing deposit {value.Id}");
+            return new DepositMade(message.TopicPartitionOffset, value.Id, value.Amount);
+        }        
     }
 }

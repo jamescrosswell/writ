@@ -14,6 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Confluent.Kafka">
+      <HintPath>..\..\..\Users\james\.nuget\packages\confluent.kafka\0.11.0-rc1\lib\netstandard1.3\Confluent.Kafka.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\..\Users\james\.nuget\packages\newtonsoft.json\10.0.3\lib\netstandard1.3\Newtonsoft.Json.dll</HintPath>
     </Reference>

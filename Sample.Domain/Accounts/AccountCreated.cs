@@ -1,18 +1,17 @@
-using System;
 using Newtonsoft.Json;
+using System;
 using Writ.Messaging.Kafka.Events;
 
 namespace Sample.Domain.Accounts
 {
-    public class AccountCreated : IEvent<Account, Guid>
+    public class AccountCreated : BaseAccountEvent
     {
-        public Guid Id { get; }
         public string AccountHolder { get; }
 
         [JsonConstructor]
-        public AccountCreated(Guid id, string accountHolder)
+        public AccountCreated(MessageOffset commandOffset, Guid id, string accountHolder)
+            : base(commandOffset, id)
         {
-            Id = id;
             AccountHolder = accountHolder ?? throw new ArgumentNullException(nameof(accountHolder));
         }
     }

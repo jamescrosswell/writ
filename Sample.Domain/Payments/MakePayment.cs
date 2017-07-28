@@ -4,7 +4,7 @@ using System;
 
 namespace Sample.Domain.Payments
 {
-    public class MakePayment : BaseCommand<Account, Guid, PaymentMade>
+    public class MakePayment : BaseCommand<Account, Guid>
     {
         public int Amount { get; }
 
@@ -14,7 +14,5 @@ namespace Sample.Domain.Payments
         {
             Amount = amount;
         }
-
-        public override PaymentMade Succeess() => new PaymentMade(Id, Amount);
     }
 }

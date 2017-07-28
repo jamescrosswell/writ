@@ -1,7 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Confluent.Kafka">
+      <HintPath>..\..\..\Users\james\.nuget\packages\confluent.kafka\0.11.0-rc1\lib\netstandard1.3\Confluent.Kafka.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>

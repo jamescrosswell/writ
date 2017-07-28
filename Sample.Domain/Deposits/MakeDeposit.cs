@@ -4,7 +4,7 @@ using System;
 
 namespace Sample.Domain.Deposits
 {
-    public class MakeDeposit : BaseCommand<Account, Guid, DepositMade>
+    public class MakeDeposit : BaseCommand<Account, Guid>
     {
         public int Amount { get; }
 
@@ -14,7 +14,5 @@ namespace Sample.Domain.Deposits
         {
             Amount = amount;
         }
-
-        public override DepositMade Succeess() => new DepositMade(Id, Amount);
     }
 }

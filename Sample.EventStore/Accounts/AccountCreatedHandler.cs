@@ -6,18 +6,14 @@ using Writ.Messaging.Kafka;
 
 namespace Sample.EventStore.Accounts
 {
-    public class AccountCreatedHandler : ObjectMessageHandler<string, AccountCreated>
+    public class AccountCreatedHandler : SampleEventHandler<Account, Guid, AccountCreated>
     {
-        private readonly ILogger<AccountCreatedHandler> _logger;
-        private readonly ApplicationState _applicationState;
-
-        public AccountCreatedHandler(ApplicationState applicationState, ILogger<AccountCreatedHandler> logger)
+        public AccountCreatedHandler(ApplicationState applicationState, ILogger<SampleEventHandler<Account, Guid, AccountCreated>> logger) 
+            : base(applicationState, logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _applicationState = applicationState ?? throw new ArgumentNullException(nameof(applicationState));
         }
 
-        public override void Handle(Message<string, object> message, AccountCreated value)
+        public override void Handle(AccountCreated value)
         {
             var account = new Account
             {
@@ -25,10 +21,9 @@ namespace Sample.EventStore.Accounts
                 AccountHolder = value.AccountHolder,
                 Balance = 0
             };
-            _applicationState.Accounts.Insert(account);
-
-            _logger.LogInformation($"{account.AccountHolder} account opened");
-
+            State.Accounts.Insert(account);
+            Logger.LogInformation($"{account.AccountHolder} account opened");
         }
+
     }
 }

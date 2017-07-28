@@ -101,6 +101,7 @@ namespace Writ.Messaging.Kafka.Events.Tests
         private class TestCreated : IEvent<Test, int>
         {
             public int Id { get; }
+            public MessageOffset CommandOffset { get; set; }
         }
     }
 }
