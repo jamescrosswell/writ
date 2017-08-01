@@ -4,12 +4,12 @@ using Writ.Messaging.Kafka.Events;
 
 namespace Sample.Domain
 {
-    public class BaseAccountEvent : IEvent<Account, Guid>
+    public abstract class BaseAccountEvent : IEvent<Account, Guid>
     {
         protected BaseAccountEvent(MessageOffset commandOffset, Guid id)
         {
             Id = id;
-            CommandOffset = commandOffset;
+            CommandOffset = commandOffset ?? throw new ArgumentNullException(nameof(commandOffset));
         }
 
         public Guid Id { get; }
@@ -28,6 +28,27 @@ namespace Sample.Domain
         /// For this reason, the command offset is recorded along with the event
         /// rather than with the original command.
         /// </remarks>
-        public MessageOffset CommandOffset { get; set; }
+        public MessageOffset CommandOffset { get; }
+
+        protected bool Equals(BaseAccountEvent other)
+        {
+            return Id.Equals(other.Id) && Equals(CommandOffset, other.CommandOffset);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((BaseAccountEvent)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Id.GetHashCode() * 397) ^ CommandOffset.GetHashCode();
+            }
+        }
     }
 }

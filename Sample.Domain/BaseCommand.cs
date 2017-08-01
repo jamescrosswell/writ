@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Writ.Messaging.Kafka.Events;
 
 namespace Sample.Domain
@@ -10,6 +11,24 @@ namespace Sample.Domain
         protected BaseCommand(TKey id)
         {
             Id = id;
+        }
+
+        protected bool Equals(BaseCommand<TAggregateRoot, TKey> other)
+        {
+            return EqualityComparer<TKey>.Default.Equals(Id, other.Id);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((BaseCommand<TAggregateRoot, TKey>)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return EqualityComparer<TKey>.Default.GetHashCode(Id);
         }
     }
 

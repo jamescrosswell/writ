@@ -14,5 +14,26 @@ namespace Sample.Domain.Payments
         {
             Amount = amount;
         }
+
+        protected bool Equals(PaymentMade other)
+        {
+            return base.Equals(other) && Amount == other.Amount;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((PaymentMade)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (base.GetHashCode() * 397) ^ Amount;
+            }
+        }
     }
 }

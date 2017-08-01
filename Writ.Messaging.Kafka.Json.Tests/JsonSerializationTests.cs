@@ -44,11 +44,11 @@ namespace Writ.Messaging.Kafka.Tests
             public JsonSerialization GetSut()
             {
                 var schemaTypeMap = new SchemaTypeMap();
-                schemaTypeMap.RegisterTypeSchema<Foo>("AvroSerializationTests.Foo");
-                schemaTypeMap.RegisterTypeSchema<Animal>("AvroSerializationTests.Animal");
-                schemaTypeMap.RegisterTypeSchema<Color>("AvroSerializationTests.Color");
-                schemaTypeMap.RegisterTypeSchema<Animal<Color>>("AvroSerializationTests.ColoredAnimal");
-                schemaTypeMap.RegisterTypeSchema<MessageEnvelope<Foo>>("AvroSerializationTests.EnvelopedFoo");
+                schemaTypeMap.RegisterTypeSchema<Foo>("JsonSerializationTests.Foo");
+                schemaTypeMap.RegisterTypeSchema<Animal>("JsonSerializationTests.Animal");
+                schemaTypeMap.RegisterTypeSchema<Color>("JsonSerializationTests.Color");
+                schemaTypeMap.RegisterTypeSchema<Animal<Color>>("JsonSerializationTests.ColoredAnimal");
+                schemaTypeMap.RegisterTypeSchema<MessageEnvelope<Foo>>("JsonSerializationTests.EnvelopedFoo");
                 schemaTypeMap.RegisterTypeSchema<CommandFailure<CreateAnimal, Animal, int>>("CreateAnimaFailure");
                 return new JsonSerialization(schemaTypeMap);
             }
@@ -134,7 +134,7 @@ namespace Writ.Messaging.Kafka.Tests
         [Fact]
         public void Deserialize_deserializes_enveloped_objects()
         {
-            var handler = new EnvelopeHandler("JsonMessageSerializationHelperTests", () => Guid.NewGuid().ToString());
+            var handler = new EnvelopeHandler("JsonSerializationTests", () => Guid.NewGuid().ToString());
 
             var input = new Foo();
             var envelopedInput = (MessageEnvelope<Foo>)handler.Stuff(input);

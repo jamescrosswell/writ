@@ -11,6 +11,6 @@ namespace Writ.Messaging.Kafka.Events
         /// one of the main reasons we have it though is so that we can avoid processing commands more 
         /// than once (for example when restarting the command processor)
         /// </summary>
-        MessageOffset CommandOffset { get; set; }
+        MessageOffset CommandOffset { get; }
     }
 }

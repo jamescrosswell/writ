@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using System;
 
 namespace Writ.Messaging.Kafka.Events
 {
@@ -18,11 +19,16 @@ namespace Writ.Messaging.Kafka.Events
             
         }
 
-        public MessageOffset(TopicPartitionOffset topicPartitionOffset)
+        public MessageOffset(string topic, int partition, long offset)
         {
-            Topic = topicPartitionOffset.Topic;
-            Partition = topicPartitionOffset.Partition;
-            Offset = topicPartitionOffset.Offset;
+            Topic = topic ?? throw new ArgumentNullException(nameof(topic));
+            Partition = partition;
+            Offset = offset;
+        }
+
+        public MessageOffset(TopicPartitionOffset topicPartitionOffset)
+            : this(topicPartitionOffset.Topic, topicPartitionOffset.Partition, topicPartitionOffset.Offset)
+        {
         }
 
         public static implicit operator MessageOffset(TopicPartitionOffset topicPartitionOffset)
@@ -33,6 +39,31 @@ namespace Writ.Messaging.Kafka.Events
         public static implicit operator TopicPartitionOffset(MessageOffset messageOffset)
         {
             return new TopicPartitionOffset(messageOffset.Topic, messageOffset.Partition, messageOffset.Offset);
+        }
+
+
+        protected bool Equals(MessageOffset other)
+        {
+            return 
+                Topic.Equals(other.Topic) 
+                && Equals(Partition, other.Partition)
+                && Equals(Offset, other.Offset);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MessageOffset)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Topic.GetHashCode() * 397) ^ Partition.GetHashCode() ^ Offset.GetHashCode();
+            }
         }
     }
 }

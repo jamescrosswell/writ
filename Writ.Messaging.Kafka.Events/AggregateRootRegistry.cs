@@ -5,6 +5,10 @@ using System.Reflection;
 
 namespace Writ.Messaging.Kafka.Events
 {
+    /// <summary>
+    /// Provides a registry that maps aggregate roots to topics that should 
+    /// be used for commands/events related to these. 
+    /// </summary>
     public class AggregateRootRegistry
     {        
         public readonly string CommandFailureTopic = "_CommandFailures"; // TODO: Make the CommandFailureTopic configurable
